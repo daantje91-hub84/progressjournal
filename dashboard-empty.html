@@ -1,0 +1,280 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Progress Journal — Dashboard</title>
+
+  <!-- Verlinkung zur zentralen CSS-Datei -->
+  <link rel="stylesheet" href="style.css">
+
+  <!-- Google Fonts & Icons -->
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700&family=IBM+Plex+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+  <style>
+    /* Zusätzliche Stile für die neuen Elemente */
+    .options-container { display: flex; flex-direction: column; gap: 12px; margin-top: 24px; }
+    .option-button { display: block; width: 100%; padding: 16px; border: 2px solid var(--border-color); border-radius: var(--radius); font-size: 16px; font-weight: 600; text-align: center; cursor: pointer; background-color: #fff; transition: border-color 0.2s, background-color 0.2s; }
+    .option-button:hover { border-color: var(--main-blue); }
+    .option-button.selected { border-color: var(--main-blue); background-color: rgba(18, 35, 168, 0.1); font-weight: 700; }
+    #deadline-input-container { margin-top: 20px; max-height: 0; overflow: hidden; transition: max-height 0.4s ease-in-out; }
+    #deadline-input-container.visible { max-height: 100px; }
+
+    /* --- Plan Display Styles (NEU) --- */
+    .plan-container {
+      margin-top: 24px;
+      text-align: left;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius);
+      background-color: #fafafa;
+    }
+    .milestone-item {
+      display: flex;
+      align-items: center;
+      padding: 16px;
+      gap: 16px;
+      border-bottom: 1px solid var(--border-color);
+    }
+    .milestone-item:last-child {
+      border-bottom: none;
+    }
+    .milestone-icon {
+      color: var(--main-blue);
+    }
+    .milestone-details h3 {
+      margin: 0 0 4px 0;
+      font-size: 16px;
+      font-weight: 700;
+    }
+    .milestone-details p {
+      margin: 0;
+      font-size: 14px;
+      color: var(--muted);
+    }
+  </style>
+
+</head>
+<body class="app-body">
+
+  <!-- 1. App-Header & Navigation (unverändert) -->
+  <header class="app-header">
+    <div class="header-left">
+      <span class="material-icons hamburger-menu" id="hamburger">menu</span>
+      <a href="#" class="app-header__logo">
+        <div class="icon"><span class="material-icons">trending_up</span></div>
+        <span class="text">Progress</span>
+      </a>
+    </div>
+    <div class="app-header__actions">
+      <span class="material-icons">search</span>
+      <span class="material-icons">notifications</span>
+      <span class="material-icons">account_circle</span>
+    </div>
+  </header>
+  <main class="main-content">
+    <div class="empty-state">
+      <h2>Bereit, dein erstes Ziel zu planen?</h2>
+      <p>Verwandle deine Ambitionen in eine klare Roadmap. Klicke auf den Button, um zu starten.</p>
+      <a href="#" id="open-wizard-btn" class="button-cta">
+        <span class="material-icons">add</span>
+        Neue Roadmap erstellen
+      </a>
+    </div>
+  </main>
+  <nav class="app-nav">
+    <a href="#" class="nav-item active"><span class="material-icons">space_dashboard</span><span class="nav-text">Dashboard</span></a>
+    <a href="#" class="nav-item"><span class="material-icons">inbox</span><span class="nav-text">Inbox</span></a>
+    <a href="#" class="nav-item"><span class="material-icons">today</span><span class="nav-text">Heute</span></a>
+    <a href="#" class="nav-item"><span class="material-icons">topic</span><span class="nav-text">Projekte</span></a>
+    <a href="#" class="nav-item"><span class="material-icons">timeline</span><span class="nav-text">Timeline</span></a>
+    <a href="#" class="nav-item"><span class="material-icons">settings</span><span class="nav-text">Einstellungen</span></a>
+  </nav>
+
+  <!-- 2. WIZARD MODAL (versteckt) -->
+  <div id="wizard-modal" class="modal-overlay hidden">
+    <div class="wizard-container">
+      <button class="close-button" id="close-wizard-btn"><span class="material-icons">close</span></button>
+      <div class="progress-bar">
+        <div class="progress-bar__label" id="progress-label">Schritt 1 von 6</div>
+        <div class="progress-bar__track"><div class="progress-bar__fill" id="progress-fill"></div></div>
+      </div>
+      <main class="wizard-content">
+        <form id="wizard-form">
+          <!-- SCHRITT 1: ZIEL -->
+          <section id="step-1" class="wizard-step">
+            <h1>Was ist dein großes Ziel?</h1>
+            <p>Beschreibe dein Ziel in einem Satz. Z.B. "Einen Marathon unter 4 Stunden laufen".</p>
+            <input type="text" id="goal-input" class="wizard-input" placeholder="Hier Ziel eingeben..." autocomplete="off">
+          </section>
+          <!-- SCHRITT 2: DEADLINE -->
+          <section id="step-2" class="wizard-step hidden">
+            <h1>Bis wann möchtest du es erreichen?</h1>
+            <p>Ein Zieldatum hilft dir, auf Kurs zu bleiben. Du kannst es später jederzeit anpassen.</p>
+            <div id="deadline-options" class="options-container">
+                <button type="button" class="option-button" data-value="ai_suggestion">Schlage mir eine realistische Deadline vor</button>
+                <button type="button" class="option-button" data-value="user_date">Ich setze mein eigenes Zieldatum</button>
+            </div>
+            <div id="deadline-input-container"><input type="date" id="deadline-input" class="wizard-input"></div>
+          </section>
+          <!-- SCHRITT 3: AUSGANGSLAGE -->
+          <section id="step-3" class="wizard-step hidden">
+            <h1>Wie ist deine aktuelle Ausgangslage?</h1>
+            <p>Sei ehrlich – das hilft uns, einen Plan zu erstellen, der wirklich zu dir passt.</p>
+            <div id="ausgangslage-options" class="options-container"></div>
+          </section>
+          <!-- SCHRITT 4: KI-PLAN-ENTWURF (FINAL) -->
+          <section id="step-4" class="wizard-step hidden">
+            <h1>Hier ist ein erster Entwurf für deine Roadmap.</h1>
+            <p>Basierend auf deinen Angaben schlägt die KI folgende Meilensteine vor. Keine Sorge, im nächsten Schritt können wir alles anpassen.</p>
+            <div id="plan-display-container" class="plan-container">
+              <!-- Meilensteine werden hier per JavaScript eingefügt -->
+            </div>
+          </section>
+          <!-- WEITERE SCHRITTE (PLATZHALTER) -->
+          <section id="step-5" class="wizard-step hidden"><h1>Passt dieser Plan für dich?</h1><p>Gib Feedback, um den Plan an deinen Lifestyle anzupassen.</p></section>
+          <section id="step-6" class="wizard-step hidden"><h1>Alles klar!</h1><p>Dein neues Ziel wird erstellt.</p></section>
+        </form>
+      </main>
+      <footer class="wizard-nav">
+          <button type="button" id="prev-button" class="button-wizard secondary"><span class="material-icons">arrow_back</span><span>Zurück</span></button>
+          <button type="button" id="next-button" class="button-wizard"><span>Weiter</span><span class="material-icons">arrow_forward</span></button>
+      </footer>
+    </div>
+  </div>
+
+  <script>
+    // ===================================================================
+    // PROFORMA DATENBANK & DATENSPEICHER
+    // ===================================================================
+    const mockDB = {
+      ausgangslage: {
+        laufen: [ { id: 'run_beginner', text: 'Ich bin kompletter Anfänger' }, { id: 'run_intermediate', text: 'Ich laufe bereits gelegentlich (z.B. 5 km)' }, { id: 'run_advanced', text: 'Ich bin fortgeschritten (z.B. 10 km+ regelmäßig)' } ],
+        lernen: [ { id: 'learn_beginner', text: 'Ich habe keine Vorkenntnisse' }, { id: 'learn_intermediate', text: 'Ich habe bereits Grundlagenwissen' }, { id: 'learn_advanced', text: 'Ich bin Experte auf einem verwandten Gebiet' } ],
+        standard: [ { id: 'std_beginner', text: 'Ich fange bei Null an' }, { id: 'std_intermediate', text: 'Ich habe schon etwas Erfahrung' }, { id: 'std_advanced', text: 'Ich bin schon ziemlich gut darin' } ]
+      },
+      // NEU: Plan-Vorlagen, die unsere "KI" verwendet
+      planTemplates: {
+        laufen: {
+          run_beginner: [
+            { title: 'Grundlagen & Gewöhnung', duration: 'Woche 1-2' },
+            { title: 'Erste Distanz-Steigerung', duration: 'Woche 3-5' },
+            { title: 'Tempohärte entwickeln', duration: 'Woche 6-9' },
+            { title: 'Wettkampf-Simulation & Tapering', duration: 'Woche 10-12' }
+          ],
+          run_intermediate: [
+            { title: 'Kilometer-Basis festigen', duration: 'Woche 1-3' },
+            { title: 'Schwellentraining & Intervalle', duration: 'Woche 4-7' },
+            { title: 'Lange Läufe optimieren', duration: 'Woche 8-10' },
+            { title: 'Gezieltes Tapering', duration: 'Woche 11-12' }
+          ]
+        },
+        standard: [
+            { title: 'Meilenstein 1: Recherche & Grundlagen', duration: 'Phase 1' },
+            { title: 'Meilenstein 2: Erster Entwurf & Prototyp', duration: 'Phase 2' },
+            { title: 'Meilenstein 3: Feedback & Überarbeitung', duration: 'Phase 3' },
+            { title: 'Meilenstein 4: Finalisierung & Abschluss', duration: 'Phase 4' }
+        ]
+      }
+    };
+    let newProjectData = { goal: null, deadline: null, deadlineType: null, startingPoint: null, generatedPlan: null };
+
+    // ===================================================================
+    // WIZARD LOGIK
+    // ===================================================================
+    const steps = document.querySelectorAll('.wizard-step');
+    const prevButton = document.getElementById('prev-button');
+    const nextButton = document.getElementById('next-button');
+    const progressLabel = document.getElementById('progress-label');
+    const progressFill = document.getElementById('progress-fill');
+    let currentStep = 0;
+    const totalSteps = steps.length;
+
+    // --- Dynamische Funktionen ---
+    function getPlanKey() {
+        const goalText = newProjectData.goal.toLowerCase();
+        if (goalText.includes('lauf') || goalText.includes('marathon')) return 'laufen';
+        if (goalText.includes('lern') || goalText.includes('sprache')) return 'lernen';
+        return 'standard';
+    }
+
+    function generateAiPlan() {
+      const planKey = getPlanKey();
+      const startingPointKey = newProjectData.startingPoint;
+      const planDisplay = document.getElementById('plan-display-container');
+      planDisplay.innerHTML = ''; // Leeren
+
+      // Finde den passenden Plan oder nimm einen Standard
+      let template = (mockDB.planTemplates[planKey] && mockDB.planTemplates[planKey][startingPointKey]) 
+                   ? mockDB.planTemplates[planKey][startingPointKey]
+                   : mockDB.planTemplates.standard;
+      
+      newProjectData.generatedPlan = template; // Speichere den Plan
+
+      template.forEach(milestone => {
+        planDisplay.innerHTML += `
+          <div class="milestone-item">
+            <span class="material-icons milestone-icon">flag</span>
+            <div class="milestone-details">
+              <h3>${milestone.title}</h3>
+              <p>${milestone.duration}</p>
+            </div>
+          </div>
+        `;
+      });
+    }
+
+    // --- Wizard-Steuerung ---
+    function updateWizardState() {
+      steps.forEach((step, index) => step.classList.toggle('hidden', index !== currentStep));
+
+      if (currentStep === 2) { populateStep3(); nextButton.disabled = !newProjectData.startingPoint; } 
+      else if (currentStep === 1) { nextButton.disabled = !newProjectData.deadlineType || (newProjectData.deadlineType === 'user_date' && !newProjectData.deadline); }
+      else if (currentStep === 3) { generateAiPlan(); nextButton.disabled = false; } // NEU: Plan generieren
+      else { nextButton.disabled = false; }
+
+      const progressPercent = ((currentStep + 1) / totalSteps) * 100;
+      progressFill.style.width = `${progressPercent}%`;
+      progressLabel.textContent = `Schritt ${currentStep + 1} von ${totalSteps}`;
+      prevButton.style.visibility = currentStep === 0 ? 'hidden' : 'visible';
+      nextButton.innerHTML = currentStep === totalSteps - 1 ? '<span>Ziel erstellen</span>' : '<span>Weiter</span><span class="material-icons">arrow_forward</span>';
+    }
+
+    nextButton.addEventListener('click', () => {
+      if (currentStep === 0) newProjectData.goal = document.getElementById('goal-input').value;
+      if (currentStep === 1 && newProjectData.deadlineType === 'user_date') newProjectData.deadline = document.getElementById('deadline-input').value;
+      console.log('Aktueller Projekt-Stand:', newProjectData);
+
+      if (currentStep < totalSteps - 1) { currentStep++; updateWizardState(); } 
+      else { alert('Ziel wird erstellt! Daten: ' + JSON.stringify(newProjectData)); window.location.href = 'dashboard-filled.html'; }
+    });
+
+    prevButton.addEventListener('click', () => { if (currentStep > 0) { currentStep--; updateWizardState(); } });
+    
+    function initializeWizard() { /* ... unverändert ... */ }
+
+    // ===================================================================
+    // MODAL & DASHBOARD LOGIK (unverändert)
+    // ===================================================================
+    const wizardModal = document.getElementById('wizard-modal');
+    const openWizardBtn = document.getElementById('open-wizard-btn');
+    const closeWizardBtn = document.getElementById('close-wizard-btn');
+    const hamburgerBtn = document.getElementById('hamburger');
+    const bodyEl = document.body;
+    if (hamburgerBtn) { if (window.innerWidth >= 768) { bodyEl.classList.add('sidenav-expanded'); } hamburgerBtn.addEventListener('click', () => { bodyEl.classList.toggle('sidenav-expanded'); }); }
+    openWizardBtn.addEventListener('click', (e) => { e.preventDefault(); initializeWizard(); wizardModal.classList.remove('hidden'); });
+    closeWizardBtn.addEventListener('click', () => { wizardModal.classList.add('hidden'); });
+
+    // --- Unveränderte Funktionen ---
+    const deadlineOptions = document.getElementById('deadline-options');
+    const deadlineInputContainer = document.getElementById('deadline-input-container');
+    const deadlineInput = document.getElementById('deadline-input');
+    deadlineOptions.addEventListener('click', (e) => { if (e.target.tagName !== 'BUTTON') return; const allButtons = deadlineOptions.querySelectorAll('.option-button'); allButtons.forEach(btn => btn.classList.remove('selected')); e.target.classList.add('selected'); const choice = e.target.dataset.value; newProjectData.deadlineType = choice; if (choice === 'user_date') { deadlineInputContainer.classList.add('visible'); newProjectData.deadline = deadlineInput.value; nextButton.disabled = !deadlineInput.value; } else { deadlineInputContainer.classList.remove('visible'); newProjectData.deadline = null; nextButton.disabled = false; } });
+    deadlineInput.addEventListener('input', () => { newProjectData.deadline = deadlineInput.value; nextButton.disabled = !deadlineInput.value; });
+    function populateStep3() { const goalText = document.getElementById('goal-input').value.toLowerCase(); const optionsContainer = document.getElementById('ausgangslage-options'); optionsContainer.innerHTML = ''; let options = mockDB.ausgangslage.standard; if (goalText.includes('lauf') || goalText.includes('marathon')) { options = mockDB.ausgangslage.laufen; } else if (goalText.includes('lern') || goalText.includes('sprache')) { options = mockDB.ausgangslage.lernen; } options.forEach(option => { const button = document.createElement('button'); button.type = 'button'; button.className = 'option-button'; button.textContent = option.text; button.dataset.value = option.id; button.onclick = () => selectOption(button, option.id, 'startingPoint'); if (newProjectData.startingPoint === option.id) button.classList.add('selected'); optionsContainer.appendChild(button); }); }
+    function selectOption(selectedButton, value, group) { newProjectData[group] = value; const allButtons = selectedButton.parentElement.querySelectorAll('.option-button'); allButtons.forEach(btn => btn.classList.remove('selected')); selectedButton.classList.add('selected'); nextButton.disabled = false; }
+    function initializeWizard() { currentStep = 0; newProjectData = { goal: null, deadline: null, deadlineType: null, startingPoint: null, generatedPlan: null }; document.getElementById('wizard-form').reset(); deadlineInputContainer.classList.remove('visible'); deadlineOptions.querySelectorAll('.option-button').forEach(btn => btn.classList.remove('selected')); updateWizardState(); }
+  </script>
+
+</body>
+</html>

@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Meine Projekte — Progress Journal</title>
+
+  <!-- Verlinkung zur zentralen CSS-Datei -->
+  <link rel="stylesheet" href="style.css">
+
+  <!-- Google Fonts & Icons -->
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700&family=IBM+Plex+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+</head>
+<body class="app-body">
+
+  <!-- 1. App-Header & Navigation -->
+  <header class="app-header">
+    <div class="header-left">
+      <span class="material-icons hamburger-menu" id="hamburger">menu</span>
+      <a href="dashboard-filled.html" class="app-header__logo">
+        <div class="icon"><span class="material-icons">trending_up</span></div>
+        <span class="text">Progress</span>
+      </a>
+    </div>
+    <div class="app-header__actions">
+      <span class="material-icons">search</span>
+      <span class="material-icons">notifications</span>
+      <span class="material-icons">account_circle</span>
+    </div>
+  </header>
+  <nav class="app-nav">
+    <a href="dashboard-filled.html" class="nav-item"><span class="material-icons">space_dashboard</span><span class="nav-text">Dashboard</span></a>
+    <a href="#" class="nav-item"><span class="material-icons">inbox</span><span class="nav-text">Inbox</span></a>
+    <a href="today.html" class="nav-item"><span class="material-icons">today</span><span class="nav-text">Heute</span></a>
+    <a href="#" class="nav-item active"><span class="material-icons">topic</span><span class="nav-text">Projekte</span></a>
+    <a href="#" class="nav-item"><span class="material-icons">timeline</span><span class="nav-text">Timeline</span></a>
+    <a href="#" class="nav-item"><span class="material-icons">settings</span><span class="nav-text">Einstellungen</span></a>
+  </nav>
+
+  <!-- 2. Hauptinhalt -->
+  <main class="main-content">
+    <div class="view-header">
+      <div class="view-header__title">
+        <h1>Meine Projekte</h1>
+      </div>
+       <a href="#" id="open-wizard-btn" class="button-cta">
+            <span class="material-icons">add</span>
+            Neues Projekt
+        </a>
+    </div>
+
+    <div class="projects-grid">
+        <!-- PROJEKT-KARTE 1 (SIMULATION) -->
+        <a href="project-detail.html" class="project-card">
+            <div class="card-header">
+                <h2 class="project-title">Einen Marathon unter 4 Stunden laufen</h2>
+                <span class="material-icons card-menu">more_vert</span>
+            </div>
+            <div class="card-body">
+                <p class="next-milestone">NÄCHSTER MEILENSTEIN:</p>
+                <p class="milestone-title">Grundlagen & Gewöhnung</p>
+            </div>
+            <div class="card-footer">
+                <div class="progress-info">
+                    <span class="progress-label">Fortschritt</span>
+                    <span class="progress-percent">5%</span>
+                </div>
+                <div class="card-progress-bar">
+                    <div class="card-progress-fill" style="width: 5%;"></div>
+                </div>
+            </div>
+        </a>
+
+        <!-- PROJEKT-KARTE 2 (SIMULATION) -->
+        <a href="#" class="project-card">
+            <div class="card-header">
+                <h2 class="project-title">Buch "Atomare Gewohnheiten" lesen</h2>
+                <span class="material-icons card-menu">more_vert</span>
+            </div>
+            <div class="card-body">
+                <p class="next-milestone">NÄCHSTER MEILENSTEIN:</p>
+                <p class="milestone-title">Teil 1: Die Grundlagen</p>
+            </div>
+            <div class="card-footer">
+                <div class="progress-info">
+                    <span class="progress-label">Fortschritt</span>
+                    <span class="progress-percent">25%</span>
+                </div>
+                <div class="card-progress-bar">
+                    <div class="card-progress-fill" style="width: 25%;"></div>
+                </div>
+            </div>
+        </a>
+
+        <!-- PROJEKT-KARTE 3 (SIMULATION) -->
+         <a href="#" class="project-card">
+            <div class="card-header">
+                <h2 class="project-title">Spanisch lernen für den Urlaub</h2>
+                <span class="material-icons card-menu">more_vert</span>
+            </div>
+            <div class="card-body">
+                <p class="next-milestone">NÄCHSTER MEILENSTEIN:</p>
+                <p class="milestone-title">Die 100 häufigsten Vokabeln</p>
+            </div>
+            <div class="card-footer">
+                <div class="progress-info">
+                    <span class="progress-label">Fortschritt</span>
+                    <span class="progress-percent">15%</span>
+                </div>
+                <div class="card-progress-bar">
+                    <div class="card-progress-fill" style="width: 15%;"></div>
+                </div>
+            </div>
+        </a>
+
+        <!-- Platzhalter-Karte für neue Projekte -->
+        <div class="project-card-placeholder">
+            <span class="material-icons">add_circle_outline</span>
+            <span>Neues Projekt hinzufügen</span>
+        </div>
+
+    </div>
+  </main>
+  
+  <script>
+    const hamburgerBtn = document.getElementById('hamburger');
+    const bodyEl = document.body;
+
+    if (hamburgerBtn) {
+        if (window.innerWidth >= 768) {
+            bodyEl.classList.add('sidenav-expanded');
+        }
+        hamburgerBtn.addEventListener('click', () => {
+            bodyEl.classList.toggle('sidenav-expanded');
+        });
+    }
+  </script>
+
+</body>
+</html>

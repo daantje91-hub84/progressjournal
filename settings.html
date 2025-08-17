@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Einstellungen — Progress Journal</title>
+
+  <!-- Verlinkung zur zentralen CSS-Datei -->
+  <link rel="stylesheet" href="style.css">
+
+  <!-- Google Fonts & Icons -->
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700&family=IBM+Plex+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+</head>
+<body class="app-body">
+
+  <!-- 1. App-Header & Navigation -->
+  <header class="app-header">
+    <div class="header-left">
+      <span class="material-icons hamburger-menu" id="hamburger">menu</span>
+      <a href="dashboard-filled.html" class="app-header__logo">
+        <div class="icon"><span class="material-icons">trending_up</span></div>
+        <span class="text">Progress</span>
+      </a>
+    </div>
+    <div class="app-header__actions">
+       <button class="quick-add-btn" title="Schnell hinzufügen"><span class="material-icons">add</span></button>
+      <span class="material-icons">search</span>
+      <span class="material-icons">notifications</span>
+      <span class="material-icons">account_circle</span>
+    </div>
+  </header>
+  <nav class="app-nav">
+    <a href="dashboard-filled.html" class="nav-item"><span class="material-icons">space_dashboard</span><span class="nav-text">Dashboard</span></a>
+    <a href="inbox.html" class="nav-item"><span class="material-icons">inbox</span><span class="nav-text">Inbox</span></a>
+    <a href="today.html" class="nav-item"><span class="material-icons">today</span><span class="nav-text">Heute</span></a>
+    <a href="projects.html" class="nav-item"><span class="material-icons">topic</span><span class="nav-text">Projekte</span></a>
+    <a href="timeline.html" class="nav-item"><span class="material-icons">timeline</span><span class="nav-text">Timeline</span></a>
+    <a href="#" class="nav-item active"><span class="material-icons">settings</span><span class="nav-text">Einstellungen</span></a>
+  </nav>
+
+  <!-- 2. Hauptinhalt -->
+  <main class="main-content">
+    <div class="view-header">
+      <div class="view-header__title">
+        <h1>Einstellungen</h1>
+      </div>
+    </div>
+
+    <div class="settings-container">
+      <!-- Profil-Sektion -->
+      <section class="settings-section">
+        <h2>Profil</h2>
+        <div class="profile-card">
+          <div class="profile-avatar"><span class="material-icons">account_circle</span></div>
+          <div class="profile-info"><span class="profile-name">Max Mustermann</span><span class="profile-email">max.mustermann@email.com</span></div>
+          <button class="button-icon">Bearbeiten</button>
+        </div>
+      </section>
+
+      <!-- NEU: Pomodoro Timer Sektion -->
+      <section class="settings-section">
+        <h2>Pomodoro Timer</h2>
+        <div class="setting-item">
+          <label for="work-duration">Arbeitsintervall (Minuten)</label>
+          <input type="number" class="setting-input" id="work-duration" value="25">
+        </div>
+        <div class="setting-item">
+          <label for="short-break">Kurze Pause (Minuten)</label>
+          <input type="number" class="setting-input" id="short-break" value="5">
+        </div>
+        <div class="setting-item">
+          <label for="long-break">Lange Pause (Minuten)</label>
+          <input type="number" class="setting-input" id="long-break" value="15">
+        </div>
+      </section>
+
+      <!-- Erscheinungsbild-Sektion -->
+      <section class="settings-section">
+        <h2>Erscheinungsbild</h2>
+        <div class="setting-item">
+          <span>Farbschema</span>
+          <div class="color-picker">
+            <div class="color-dot active" style="background-color: var(--main-blue);"></div>
+            <div class="color-dot" style="background-color: #008080;"></div>
+            <div class="color-dot" style="background-color: #800080;"></div>
+            <div class="color-dot" style="background-color: #D2691E;"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Benachrichtigungen-Sektion -->
+      <section class="settings-section">
+        <h2>Benachrichtigungen</h2>
+        <div class="setting-item">
+          <span>Tägliche Erinnerungen</span>
+          <div class="toggle-switch"><input type="checkbox" id="toggle-daily" class="toggle-input" checked><label for="toggle-daily" class="toggle-label"></label></div>
+        </div>
+        <div class="setting-item">
+          <span>Meilenstein erreicht</span>
+          <div class="toggle-switch"><input type="checkbox" id="toggle-milestone" class="toggle-input" checked><label for="toggle-milestone" class="toggle-label"></label></div>
+        </div>
+      </section>
+      
+      <!-- Konto-Sektion -->
+      <section class="settings-section">
+        <h2>Konto</h2>
+        <div class="setting-item"><a href="index.html" class="logout-link">Ausloggen</a></div>
+      </section>
+    </div>
+  </main>
+  
+  <script>
+    const hamburgerBtn = document.getElementById('hamburger');
+    const bodyEl = document.body;
+    if (hamburgerBtn) { if (window.innerWidth >= 768) { bodyEl.classList.add('sidenav-expanded'); } hamburgerBtn.addEventListener('click', () => { bodyEl.classList.toggle('sidenav-expanded'); }); }
+  </script>
+
+</body>
+</html>

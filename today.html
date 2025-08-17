@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Heute — Progress Journal</title>
+
+  <!-- Verlinkung zur zentralen CSS-Datei -->
+  <link rel="stylesheet" href="style.css">
+
+  <!-- Google Fonts & Icons -->
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700&family=IBM+Plex+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+</head>
+<body class="app-body">
+
+  <!-- 1. App-Header & Navigation -->
+  <header class="app-header">
+    <div class="header-left">
+      <span class="material-icons hamburger-menu" id="hamburger">menu</span>
+      <a href="dashboard-filled.html" class="app-header__logo">
+        <div class="icon"><span class="material-icons">trending_up</span></div>
+        <span class="text">Progress</span>
+      </a>
+    </div>
+    <div class="app-header__actions">
+      <!-- NEUER QUICK-ADD BUTTON -->
+      <button class="quick-add-btn" title="Schnell hinzufügen">
+        <span class="material-icons">add</span>
+      </button>
+      <span class="material-icons">search</span>
+      <span class="material-icons">notifications</span>
+      <span class="material-icons">account_circle</span>
+    </div>
+  </header>
+  <nav class="app-nav">
+    <a href="dashboard-filled.html" class="nav-item"><span class="material-icons">space_dashboard</span><span class="nav-text">Dashboard</span></a>
+    <a href="inbox.html" class="nav-item"><span class="material-icons">inbox</span><span class="nav-text">Inbox</span></a>
+    <a href="#" class="nav-item active"><span class="material-icons">today</span><span class="nav-text">Heute</span></a>
+    <a href="projects.html" class="nav-item"><span class="material-icons">topic</span><span class="nav-text">Projekte</span></a>
+    <a href="timeline.html" class="nav-item"><span class="material-icons">timeline</span><span class="nav-text">Timeline</span></a>
+    <a href="settings.html" class="nav-item"><span class="material-icons">settings</span><span class="nav-text">Einstellungen</span></a>
+  </nav>
+
+  <!-- 2. Hauptinhalt -->
+  <main class="main-content">
+    <div class="view-header">
+      <div class="view-header__title">
+        <h1>Heute</h1>
+        <p id="current-date"></p>
+      </div>
+    </div>
+
+    <!-- POMODORO TIMER -->
+    <div class="pomodoro-timer">
+        <div class="timer-display" id="timer-display">25:00</div>
+        <div class="timer-controls">
+            <button id="start-pause-btn" class="timer-btn"><span class="material-icons">play_arrow</span> Start</button>
+            <button id="reset-btn" class="timer-btn secondary"><span class="material-icons">replay</span></button>
+        </div>
+    </div>
+
+    <div class="today-list">
+        <!-- Aufgaben für heute (Simulation) -->
+        <div class="today-task-item">
+            <div class="task-info">
+                <span class="task-checkbox"></span>
+                <span class="task-text">Wohnung aufräumen</span>
+            </div>
+            <div class="task-meta">
+                <div class="pomodoro-task-info">
+                    <span class="material-icons">timer</span>
+                    <span>4 x 25 min</span>
+                </div>
+                <button class="start-task-timer-btn" title="Timer für diese Aufgabe starten"><span class="material-icons">play_circle_filled</span></button>
+            </div>
+        </div>
+
+        <div class="today-task-item">
+            <div class="task-info">
+                <span class="task-checkbox"></span>
+                <span class="task-text">Dehn-Routine etablieren</span>
+            </div>
+             <div class="task-meta">
+                <div class="pomodoro-task-info">
+                    <span class="material-icons">timer</span>
+                    <span>1 x 25 min</span>
+                </div>
+                <button class="start-task-timer-btn" title="Timer für diese Aufgabe starten"><span class="material-icons">play_circle_filled</span></button>
+            </div>
+        </div>
+    </div>
+  </main>
+  
+  <script>
+    // --- Standard-Skripte ---
+    const hamburgerBtn = document.getElementById('hamburger');
+    const bodyEl = document.body;
+    if (hamburgerBtn) { if (window.innerWidth >= 768) { bodyEl.classList.add('sidenav-expanded'); } hamburgerBtn.addEventListener('click', () => { bodyEl.classList.toggle('sidenav-expanded'); }); }
+    const dateElement = document.getElementById('current-date');
+    const today = new Date();
+    const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+    dateElement.textContent = today.toLocaleDateString('de-DE', options);
+
+    // --- Pomodoro Timer Logik ---
+    const timerDisplay = document.getElementById('timer-display');
+    const startPauseBtn = document.getElementById('start-pause-btn');
+    const resetBtn = document.getElementById('reset-btn');
+    
+    let timer;
+    let isRunning = false;
+    let timeLeft = 25 * 60; // 25 Minuten in Sekunden
+
+    function updateDisplay() {
+        const minutes = Math.floor(timeLeft / 60);
+        const seconds = timeLeft % 60;
+        timerDisplay.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    }
+
+    function startPauseTimer() {
+        if (isRunning) {
+            clearInterval(timer);
+            startPauseBtn.innerHTML = '<span class="material-icons">play_arrow</span> Start';
+        } else {
+            timer = setInterval(() => {
+                timeLeft--;
+                updateDisplay();
+                if (timeLeft <= 0) {
+                    clearInterval(timer);
+                    alert('Zeit ist um!');
+                }
+            }, 1000);
+            startPauseBtn.innerHTML = '<span class="material-icons">pause</span> Pause';
+        }
+        isRunning = !isRunning;
+    }
+
+    function resetTimer() {
+        clearInterval(timer);
+        isRunning = false;
+        timeLeft = 25 * 60;
+        updateDisplay();
+        startPauseBtn.innerHTML = '<span class="material-icons">play_arrow</span> Start';
+    }
+
+    startPauseBtn.addEventListener('click', startPauseTimer);
+    resetBtn.addEventListener('click', resetTimer);
+    updateDisplay();
+
+  </script>
+
+</body>
+</html>

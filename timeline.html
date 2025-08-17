@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Timeline — Progress Journal</title>
+
+  <!-- Verlinkung zur zentralen CSS-Datei -->
+  <link rel="stylesheet" href="style.css">
+
+  <!-- Google Fonts & Icons -->
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700&family=IBM+Plex+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+</head>
+<body class="app-body">
+
+  <!-- 1. App-Header & Navigation -->
+  <header class="app-header">
+    <div class="header-left">
+      <span class="material-icons hamburger-menu" id="hamburger">menu</span>
+      <a href="dashboard-filled.html" class="app-header__logo">
+        <div class="icon"><span class="material-icons">trending_up</span></div>
+        <span class="text">Progress</span>
+      </a>
+    </div>
+    <div class="app-header__actions">
+      <span class="material-icons">search</span>
+      <span class="material-icons">notifications</span>
+      <span class="material-icons">account_circle</span>
+    </div>
+  </header>
+  <nav class="app-nav">
+    <a href="dashboard-filled.html" class="nav-item"><span class="material-icons">space_dashboard</span><span class="nav-text">Dashboard</span></a>
+    <a href="#" class="nav-item"><span class="material-icons">inbox</span><span class="nav-text">Inbox</span></a>
+    <a href="today.html" class="nav-item"><span class="material-icons">today</span><span class="nav-text">Heute</span></a>
+    <a href="projects.html" class="nav-item"><span class="material-icons">topic</span><span class="nav-text">Projekte</span></a>
+    <a href="#" class="nav-item active"><span class="material-icons">timeline</span><span class="nav-text">Timeline</span></a>
+    <a href="#" class="nav-item"><span class="material-icons">settings</span><span class="nav-text">Einstellungen</span></a>
+  </nav>
+
+  <!-- 2. Hauptinhalt -->
+  <main class="main-content">
+    <div class="view-header">
+      <div class="view-header__title">
+        <h1>Timeline</h1>
+        <p>Deine persönliche Erfolgsgeschichte</p>
+      </div>
+      <div class="project-header__actions">
+        <button class="button-icon"><span class="material-icons">filter_list</span> Filtern</button>
+      </div>
+    </div>
+
+    <div class="timeline-content">
+      
+      <!-- STATISTIK-WIDGET (PLATZHALTER) -->
+      <div class="timeline-card stats-widget">
+        <h3>Lauf-Performance</h3>
+        <p>Deine durchschnittliche Pace pro km über die letzten 4 Wochen.</p>
+        <div class="chart-placeholder">
+            <svg viewBox="0 0 100 40" preserveAspectRatio="none">
+                <polyline fill="none" stroke="var(--main-blue)" stroke-width="1" points="0,30 20,25 40,28 60,22 80,18 100,15" />
+            </svg>
+        </div>
+      </div>
+
+      <!-- ZEITGRUPPE -->
+      <div class="timeline-group-header">Diese Woche</div>
+
+      <!-- EVENT: MEILENSTEIN ERREICHT -->
+      <div class="timeline-card event-card">
+        <div class="event-icon" style="background-color: #e6f7ff; color: #096dd9;"><span class="material-icons">flag</span></div>
+        <div class="event-details">
+            <p class="event-title">Meilenstein erreicht: <strong>Grundlagen & Gewöhnung</strong></p>
+            <p class="event-context">Im Projekt: <a href="project-detail.html">Marathon unter 4 Stunden laufen</a></p>
+            <p class="event-date">Gestern</p>
+        </div>
+      </div>
+
+      <!-- EVENT: PERSÖNLICHE NOTIZ -->
+      <div class="timeline-card event-card">
+        <div class="event-icon" style="background-color: #fffbe6; color: #d48806;"><span class="material-icons">edit_note</span></div>
+        <div class="event-details">
+            <p class="event-title"><strong>Persönlicher Rekord beim Lesen!</strong></p>
+            <p class="event-context">"Heute zum ersten Mal 50 Seiten am Stück gelesen. Fühle mich super fokussiert."</p>
+            <p class="event-date">Vor 3 Tagen</p>
+        </div>
+      </div>
+
+      <!-- ZEITGRUPPE -->
+      <div class="timeline-group-header">Letzte Woche</div>
+      
+      <!-- EVENT: PROJEKT ABGESCHLOSSEN -->
+      <div class="timeline-card event-card">
+        <div class="event-icon" style="background-color: #f6ffed; color: #389e0d;"><span class="material-icons">workspace_premium</span></div>
+        <div class="event-details">
+            <p class="event-title">Projekt abgeschlossen: <strong>Balkon neu bepflanzen</strong></p>
+            <p class="event-context">Du hast alle Aufgaben für dieses Projekt erledigt. Großartige Arbeit!</p>
+            <p class="event-date">1. August 2025</p>
+        </div>
+      </div>
+
+    </div>
+  </main>
+  
+  <script>
+    const hamburgerBtn = document.getElementById('hamburger');
+    const bodyEl = document.body;
+
+    if (hamburgerBtn) {
+        if (window.innerWidth >= 768) {
+            bodyEl.classList.add('sidenav-expanded');
+        }
+        hamburgerBtn.addEventListener('click', () => {
+            bodyEl.classList.toggle('sidenav-expanded');
+        });
+    }
+  </script>
+
+</body>
+</html>
