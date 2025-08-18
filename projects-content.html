@@ -1,12 +1,14 @@
-<div class="view-header">
+<!-- Projekte-Inhalt -->
+<section id="projects-content" class="view-content hidden">
+  <div class="view-header">
     <div class="view-header__title">
-        <h1>Meine Projekte</h1>
+      <h1>Meine Projekte</h1>
     </div>
-    <button class="button-cta" id="open-wizard-btn-projects">
-        <span class="material-icons">add</span>
-        Neues Projekt
-    </button>
-</div>
-<div class="projects-grid" id="all-projects-grid">
-    <!-- All projects werden hier per JavaScript eingefügt -->
-</div>
+    <a href="#" id="open-wizard-btn-projects" class="button-cta">
+      <span class="material-icons">add</span>
+      Neues Projekt
+    </a>
+  </div>
+  <!-- Dieser Grid-Container wird jetzt dynamisch von app.js gefüllt -->
+  <div class="projects-grid" id="projects-grid-projects"></div>
+</section>
