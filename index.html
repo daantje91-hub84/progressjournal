@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Progress Journal — App Start</title>
+  <title>Progress Journal</title>
 
   <!-- Verlinkung zur zentralen CSS-Datei -->
   <link rel="stylesheet" href="style.css">
@@ -14,10 +14,12 @@
 </head>
 <body>
 
-  <!-- Screen 1: Splash Screen -->
+  <!-- ===================================================================
+    SCREEN 1: Splash Screen
+    =================================================================== -->
   <div id="splash-screen" class="screen-container">
     <div class="logo logo--stacked" role="img" aria-label="Progress Journal Logo">
-      <div class="logo__icon" aria-hidden="true"><span class="material-icons" style="font-size:36px;line-height:1">trending_up</span></div>
+      <div class="logo__icon"><span class="material-icons" style="font-size:36px;line-height:1">trending_up</span></div>
       <div class="logo__text">
         <h1 class="logo__word-progress">Progress</h1>
         <div class="logo__word-journal">Journal</div>
@@ -25,7 +27,9 @@
     </div>
   </div>
 
-  <!-- Screen 2: Login Screen -->
+  <!-- ===================================================================
+    SCREEN 2: Login Screen
+    =================================================================== -->
   <div id="login-screen" class="screen-container hidden">
     <div class="form-container">
       <header class="logo" style="justify-content: center; margin-bottom: 32px;">
@@ -37,48 +41,27 @@
       </header>
       <main>
         <h2>Willkommen zurück!</h2>
-        <form onsubmit="event.preventDefault(); showOnboarding();">
+        <form action="home.html" onsubmit="event.preventDefault(); window.location.href = this.action;">
           <div class="input-group"><label for="email">E-Mail-Adresse</label><input type="email" id="email" name="email" placeholder="deine@email.com" required></div>
           <div class="input-group"><label for="password">Passwort</label><input type="password" id="password" name="password" placeholder="••••••••" required></div>
           <button type="submit" class="button button-primary">Anmelden</button>
         </form>
         <div class="divider">ODER</div>
-        <a href="#" onclick="showOnboarding()" class="button button-social"><img src="https://www.google.com/favicon.ico" alt="Google logo">Weiter mit Google</a>
-        <a href="#" onclick="showOnboarding()" class="button button-social"><span class="material-icons">apple</span>Weiter mit Apple</a>
+        <a href="home.html" class="button button-social"><img src="https://www.google.com/favicon.ico" alt="Google logo">Weiter mit Google</a>
+        <a href="home.html" class="button button-social"><span class="material-icons">apple</span>Weiter mit Apple</a>
       </main>
-      <footer class="login-footer"><p>Noch keinen Account? <a href="#">Jetzt registrieren</a></p></footer>
+      <footer class="login-footer"><p>Noch keinen Account? <a href="onboarding.html">Jetzt registrieren</a></p></footer>
     </div>
   </div>
-
-  <!-- Screen 3: Onboarding Welcome Screen -->
-  <div id="onboarding-screen" class="screen-container hidden">
-    <div class="form-container">
-        <h2>Hallo Abenteurer!</h2>
-        <p>Willkommen beim Progress Journal. Wir helfen dir, deine größten Ziele zu erreichen.</p>
-        <p>Bist du bereit für eine 5-minütige Tour, um die wichtigsten Funktionen kennenzulernen?</p>
-        <!-- === KORRIGIERTER LINK HIER === -->
-        <a href="onboarding.html" class="button button-primary">Ja, los geht's!</a>
-        <a href="dashboard-empty.html" class="button button-secondary">Nein danke, ich entdecke lieber selbst</a>
-    </div>
-  </div>
-
+  
   <script>
-    const splashScreen = document.getElementById('splash-screen');
-    const loginScreen = document.getElementById('login-screen');
-    const onboardingScreen = document.getElementById('onboarding-screen');
-
-    function switchScreen(fromScreen, toScreen) {
-        fromScreen.classList.add('hidden');
-        toScreen.classList.remove('hidden');
-    }
-
-    function showOnboarding() {
-      switchScreen(loginScreen, onboardingScreen);
-    }
-
     window.onload = function() {
+      const splashScreen = document.getElementById('splash-screen');
+      const loginScreen = document.getElementById('login-screen');
+      
       setTimeout(() => {
-        switchScreen(splashScreen, loginScreen);
+        splashScreen.classList.add('hidden');
+        loginScreen.classList.remove('hidden');
       }, 2500);
     };
   </script>

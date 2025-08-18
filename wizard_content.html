@@ -1,0 +1,54 @@
+<div id="wizard-modal" class="modal-overlay hidden">
+  <div class="wizard-container">
+    <button class="close-button" id="close-wizard-btn"><span class="material-icons">close</span></button>
+    <div class="progress-bar">
+      <div class="progress-bar__label" id="progress-label">Schritt 1 von 4</div>
+      <div class="progress-bar__track"><div class="progress-bar__fill" id="progress-fill"></div></div>
+    </div>
+    <main class="wizard-content">
+      <!-- NEUER SCHRITT 0: Wahl KI vs. Manuell -->
+      <section id="step-0" class="wizard-step">
+        <h1>Wie möchtest du deine Roadmap erstellen?</h1>
+        <p>Du kannst die KI nutzen, um einen Plan zu erstellen, oder du legst die Meilensteine selbst fest.</p>
+        <div class="options-container">
+          <button type="button" class="option-button" data-wizard-type="ai" onclick="selectWizardType(this, 'ai')">Mit KI erstellen</button>
+          <button type="button" class="option-button" data-wizard-type="manual" onclick="selectWizardType(this, 'manual')">Manuell erstellen</button>
+        </div>
+      </section>
+      <!-- SCHRITT 1: ZIEL -->
+      <section id="step-1" class="wizard-step hidden">
+        <h1>Was ist dein großes Ziel?</h1>
+        <p>Beschreibe dein Ziel in einem Satz. Z.B. "Einen Marathon unter 4 Stunden laufen".</p>
+        <input type="text" id="goal-input" class="wizard-input" placeholder="Hier Ziel eingeben..." autocomplete="off">
+      </section>
+      <!-- SCHRITT 2: DEADLINE -->
+      <section id="step-2" class="wizard-step hidden">
+        <h1>Bis wann möchtest du es erreichen?</h1>
+        <p>Ein Zieldatum hilft dir, auf Kurs zu bleiben. Du kannst es später jederzeit anpassen.</p>
+        <div id="deadline-options" class="options-container">
+            <button type="button" class="option-button" data-value="ai_suggestion">Schlage mir eine realistische Deadline vor</button>
+            <button type="button" class="option-button" data-value="user_date">Ich setze mein eigenes Zieldatum</button>
+        </div>
+        <div id="deadline-input-container"><input type="date" id="deadline-input" class="wizard-input"></div>
+      </section>
+      <!-- SCHRITT 3: AUSGANGSLAGE (nur für KI) -->
+      <section id="step-3" class="wizard-step hidden">
+        <h1>Wie ist deine aktuelle Ausgangslage?</h1>
+        <p>Sei ehrlich – das hilft uns, einen Plan zu erstellen, der wirklich zu dir passt.</p>
+        <div id="ausgangslage-options" class="options-container"></div>
+      </section>
+      <!-- SCHRITT 4: KI-PLAN-ENTWURF (FINAL für KI) -->
+      <section id="step-4" class="wizard-step hidden">
+        <h1>Hier ist ein erster Entwurf für deine Roadmap.</h1>
+        <p>Basierend auf deinen Angaben schlägt die KI folgende Meilensteine vor. Keine Sorge, im nächsten Schritt können wir alles anpassen.</p>
+        <div id="plan-display-container" class="plan-container">
+          <!-- Meilensteine werden hier per JavaScript eingefügt -->
+        </div>
+      </section>
+    </main>
+    <footer class="wizard-nav">
+        <button type="button" id="prev-button" class="button-wizard secondary"><span class="material-icons">arrow_back</span><span>Zurück</span></button>
+        <button type="button" id="next-button" class="button-wizard"><span>Weiter</span><span class="material-icons">arrow_forward</span></button>
+    </footer>
+  </div>
+</div>

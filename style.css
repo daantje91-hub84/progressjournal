@@ -23,10 +23,13 @@
 body {
   margin: 0;
   font-family: "IBM Plex Sans", "Helvetica", Arial, sans-serif;
-  background: #fff;
+  background: var(--light-gray);
   color: var(--text);
+  padding-top: var(--header-height);
 }
-
+.app-body {
+  padding-bottom: var(--nav-height-mobile);
+}
 
 /* === 2. Layout-Helfer === */
 .screen-center {
@@ -54,8 +57,8 @@ body {
 .hidden {
   opacity: 0;
   pointer-events: none;
+  display: none !important;
 }
-
 
 /* === 3. Logo Styles === */
 .logo { display: flex; align-items: center; gap: 18px; }
@@ -91,10 +94,10 @@ body {
 
 /* === 5. App Layout (Dashboard) === */
 .app-body {
-  background: var(--light-gray);
   padding-top: var(--header-height);
   transition: padding-left var(--transition-speed) ease-in-out;
 }
+.app-body.sidenav-expanded { padding-left: var(--sidenav-width-desktop); }
 .app-header { display: flex; align-items: center; justify-content: space-between; padding: 0 24px; height: var(--header-height); background: #fff; border-bottom: 1px solid var(--border-color); position: fixed; top: 0; left: 0; right: 0; z-index: 100; }
 .header-left { display: flex; align-items: center; gap: 16px; }
 .hamburger-menu { display: none; cursor: pointer; padding: 8px; margin-left: -8px; color: var(--muted); }
@@ -103,7 +106,17 @@ body {
 .app-header__logo .text { font-family: "Montserrat", sans-serif; font-weight: 700; font-size: 18px; color: var(--main-blue); text-transform: uppercase; }
 .app-header__actions { display: flex; align-items: center; gap: 20px; color: var(--muted); }
 .app-header__actions .material-icons { font-size: 28px; cursor: pointer; }
-.main-content { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; height: calc(100vh - var(--header-height)); padding: 20px; padding-bottom: var(--nav-height-mobile); transition: padding-left var(--transition-speed) ease-in-out; }
+.main-content { 
+  display: flex; flex-direction: column; 
+  align-items: center; text-align: center; 
+  height: calc(100vh - var(--header-height)); 
+  padding: 20px; 
+  padding-bottom: var(--nav-height-mobile); 
+  transition: padding-left var(--transition-speed) ease-in-out; 
+  flex-grow: 1; 
+  overflow-y: auto; 
+}
+
 .empty-state { max-width: 450px; }
 .empty-state h2 { font-family: 'Montserrat', sans-serif; font-size: 22px; margin-top: 0; margin-bottom: 8px; }
 .empty-state p { color: var(--muted); font-size: 16px; line-height: 1.5; margin-bottom: 24px; }
@@ -119,26 +132,28 @@ body {
 
 /* Mobile Nav */
 @media (max-width: 767px) {
+  .app-body { padding-bottom: var(--nav-height-mobile); }
   .app-nav { display: flex; justify-content: space-around; height: var(--nav-height-mobile); border-top: 1px solid var(--border-color); position: fixed; bottom: 0; left: 0; right: 0; }
   .nav-item { flex-direction: column; justify-content: center; font-size: 12px; gap: 4px; padding: 4px 8px; }
   .nav-item .material-icons { font-size: 24px; }
+  .main-content { padding-bottom: calc(20px + var(--nav-height-mobile)); }
 }
 
 /* Desktop Nav */
 @media (min-width: 768px) {
-  .app-body { padding-left: var(--sidenav-width-collapsed); }
-  .app-body.sidenav-expanded { padding-left: var(--sidenav-width-desktop); }
+  body.app-body { padding-left: var(--sidenav-width-collapsed); padding-bottom: 20px; }
+  body.app-body.sidenav-expanded { padding-left: var(--sidenav-width-desktop); }
   .hamburger-menu { display: block; }
   .main-content { padding-bottom: 20px; }
   .app-nav { display: flex; flex-direction: column; position: fixed; left: 0; top: var(--header-height); bottom: 0; width: var(--sidenav-width-collapsed); border-right: 1px solid var(--border-color); padding: 16px 0; }
-  .app-body.sidenav-expanded .app-nav { width: var(--sidenav-width-desktop); }
+  body.app-body.sidenav-expanded .app-nav { width: var(--sidenav-width-desktop); }
   .nav-item { flex-direction: row; justify-content: flex-start; font-size: 15px; gap: 16px; padding: 12px 26px; }
   .nav-item:hover { background-color: var(--light-gray); }
   .nav-item.active { background-color: rgba(18, 35, 168, 0.1); font-weight: 700; }
   .nav-item .material-icons { font-size: 26px; }
   .nav-text { opacity: 0; }
-  .app-body.sidenav-expanded .nav-text { opacity: 1; }
-  .app-body.sidenav-expanded .nav-item { padding: 12px 24px; }
+  body.app-body.sidenav-expanded .nav-text { opacity: 1; }
+  body.app-body.sidenav-expanded .nav-item { padding: 12px 24px; }
 }
 
 
@@ -219,6 +234,8 @@ body {
     justify-content: flex-start; /* Inhalt startet jetzt oben */
     align-items: stretch;
     padding: 24px;
+    flex-grow: 1;
+    overflow-y: auto; /* Allow content to scroll */
 }
 
 .dashboard-header {
@@ -615,90 +632,6 @@ body {
 .task-project-link a:hover {
     text-decoration: underline;
 }
-/* === 12. Timeline-Ansicht Styles (NEU) === */
-
-.timeline-content {
-    width: 100%;
-    max-width: 800px;
-}
-
-.timeline-card {
-    background: #fff;
-    border-radius: var(--radius);
-    border: 1px solid var(--border-color);
-    padding: 20px;
-    margin-bottom: 20px;
-}
-
-.stats-widget h3 {
-    margin: 0 0 4px 0;
-    font-size: 18px;
-}
-
-.stats-widget p {
-    margin: 0 0 16px 0;
-    font-size: 14px;
-    color: var(--muted);
-}
-
-.chart-placeholder {
-    width: 100%;
-    height: 80px;
-    background: linear-gradient(to top, rgba(18, 35, 168, 0.05), transparent);
-    border-radius: var(--radius);
-}
-
-.timeline-group-header {
-    font-size: 14px;
-    font-weight: 700;
-    color: var(--muted);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    margin-bottom: 12px;
-    padding-left: 4px;
-}
-
-.event-card {
-    display: flex;
-    align-items: flex-start;
-    gap: 16px;
-}
-
-.event-icon {
-    width: 44px;
-    height: 44px;
-    min-width: 44px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.event-icon .material-icons {
-    font-size: 24px;
-}
-
-.event-details p {
-    margin: 0;
-    line-height: 1.5;
-}
-
-.event-title {
-    font-size: 16px;
-    color: var(--text);
-}
-
-.event-context {
-    font-size: 14px;
-    color: var(--muted);
-    margin-top: 4px;
-}
-
-.event-context a {
-    color: var(--main-blue);
-    font-weight: 600;
-    text-decoration: none;
-}
 
 .event-date {
     font-size: 12px;
@@ -904,187 +837,6 @@ body {
     text-decoration: none;
 }
 
-/* ===============================
-   Personas – Anna & Thomas (Progress Journal)
-   Works with existing variables from style.css and adds accents.
-   =============================== */
-
-/* 0) Accents (extend only if not already present) */
-:root {
-  --accent-pink: #9E6364;  /* matches project palette */
-  --accent-gold: #EEA243;  /* matches project palette */
-  --accent-blue-2: #3040d0;
-  --accent-red-2: #ff4d5a;
-}
-
-/* 1) Persona Card Base */
-.persona-card {
-  --persona-bg: #fff;
-  --persona-border: var(--border-color, #e5e7eb);
-  --persona-shadow: 0 8px 24px rgba(15,23,55,0.08);
-  --persona-radius: var(--radius, 12px);
-  --persona-gap: 16px;
-  background: var(--persona-bg);
-  border: 1px solid var(--persona-border);
-  border-radius: var(--persona-radius);
-  padding: 18px;
-  display: grid;
-  grid-template-columns: 72px 1fr auto;
-  grid-template-areas: "avatar header badge"
-                       "avatar meta   badge"
-                       "footer footer footer";
-  gap: var(--persona-gap);
-  align-items: center;
-  transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease;
-}
-.persona-card:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--persona-shadow);
-  border-color: rgba(18,35,168,0.25);
-}
-
-/* Compact variant (use on dense grids) */
-.persona-card.compact {
-  grid-template-columns: 56px 1fr auto;
-  padding: 14px;
-}
-
-/* 2) Avatar (initials or img) */
-.persona-avatar {
-  grid-area: avatar;
-  width: 72px;
-  height: 72px;
-  min-width: 72px;
-  border-radius: 50%;
-  display: grid;
-  place-items: center;
-  color: #fff;
-  font-weight: 800;
-  font-family: "Montserrat", "Helvetica", Arial, sans-serif;
-  letter-spacing: .5px;
-  position: relative;
-  box-shadow: 0 8px 22px rgba(18,35,168,.18);
-  overflow: hidden;
-}
-.persona-card.compact .persona-avatar { width: 56px; height: 56px; min-width: 56px; }
-
-.persona-avatar img {
-  width: 100%; height: 100%; object-fit: cover; display: block;
-}
-
-/* fallback initials */
-.persona-avatar .initials { font-size: 22px; z-index: 1; }
-
-/* subtle ring using conic gradient driven by --progress (0..100) */
-.persona-avatar::after {
-  content: "";
-  position: absolute;
-  inset: -3px;
-  border-radius: 50%;
-  padding: 3px;
-  background:
-    conic-gradient(var(--ring-color, var(--main-blue)) calc(var(--progress, 0) * 1%), rgba(0,0,0,0) 0);
-  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 6px), #000 0);
-          mask: radial-gradient(farthest-side, transparent calc(100% - 6px), #000 0);
-  pointer-events: none;
-}
-
-/* 3) Header + Meta */
-.persona-header { grid-area: header; display: flex; align-items: baseline; gap: 8px; }
-.persona-name { margin: 0; font-size: 18px; font-weight: 800; }
-.persona-role { margin: 0; font-size: 12px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .4px; }
-
-.persona-meta { grid-area: meta; display: flex; gap: 10px; flex-wrap: wrap; }
-.persona-chip {
-  display: inline-flex; align-items: center; gap: 6px;
-  border: 1px solid var(--border-color, #e5e7eb);
-  padding: 6px 10px; border-radius: 999px; font-size: 12px; font-weight: 700; color: var(--muted);
-}
-.persona-chip .dot {
-  width: 8px; height: 8px; border-radius: 50%;
-  background: currentColor;
-}
-
-/* 4) Availability (weekly hours visual) */
-.persona-availability { grid-area: footer; width: 100%; }
-.avail-label {
-  display: flex; justify-content: space-between; align-items: baseline;
-  font-size: 12px; font-weight: 700; color: var(--muted); margin-bottom: 6px;
-}
-.avail-bar {
-  --hours: 6;        /* set from JS / inline style */
-  --max-hours: 10;   /* reference window */
-  --p: calc((var(--hours) / var(--max-hours)) * 100%);
-  position: relative; height: 10px; border-radius: 999px;
-  background: var(--light-gray, #f2f4f7);
-  overflow: hidden; border: 1px solid var(--border-color, #e5e7eb);
-}
-.avail-fill {
-  width: var(--p); height: 100%;
-  background: linear-gradient(90deg, var(--avail-start), var(--avail-end));
-}
-
-/* thresholds (color intent) */
-.avail--ok   { --avail-start: var(--main-blue); --avail-end: var(--accent-blue-2); }
-.avail--low  { --avail-start: var(--accent-gold); --avail-end: #ffb454; }
-.avail--crit { --avail-start: var(--main-red);  --avail-end: var(--accent-red-2); }
-
-/* 5) Right badge (life happens / replanned) */
-.persona-badge {
-  grid-area: badge;
-  display: inline-flex; align-items: center; gap: 8px;
-  font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: .5px;
-  padding: 8px 10px; border-radius: 10px;
-  border: 1px dashed var(--border-color, #e5e7eb);
-  color: var(--muted);
-}
-.persona-badge .material-icons { font-size: 16px; }
-
-.persona-badge.replanned {
-  color: #fff; border-style: solid;
-  background: linear-gradient(135deg, var(--main-blue), var(--accent-gold));
-  border-color: transparent;
-}
-
-/* 6) Themes for Anna & Thomas */
-.persona--anna .persona-avatar {
-  background: radial-gradient(120px 120px at 30% 30%, var(--accent-gold), transparent 60%),
-              linear-gradient(135deg, var(--main-red), var(--accent-pink));
-  --ring-color: var(--accent-gold);
-}
-.persona--anna .persona-name { color: var(--main-red); }
-.persona--anna .persona-chip { border-color: rgba(227,32,45,.2); color: #b5565e; }
-.persona--anna .avail--ok .avail-fill { background: linear-gradient(90deg, var(--accent-gold), #ffc270); }
-
-.persona--thomas .persona-avatar {
-  background: radial-gradient(120px 120px at 65% 35%, #3f54ff, transparent 60%),
-              linear-gradient(135deg, var(--main-blue), var(--accent-blue-2));
-  --ring-color: var(--main-blue);
-}
-.persona--thomas .persona-name { color: var(--main-blue); }
-.persona--thomas .persona-chip { border-color: rgba(18,35,168,.2); color: #3040d0; }
-
-/* Busy / reduced time state */
-.persona--busy { opacity: .92; }
-.persona--busy .persona-avatar { filter: grayscale(.05) saturate(.9); }
-.persona--busy .persona-badge { background: linear-gradient(135deg, var(--accent-gold), #ffd27a); color: #1a1a1a; border: none; }
-.persona--busy .avail-fill { filter: saturate(1.1); }
-
-/* 7) Mini list item variant (for Today view) */
-.persona-item {
-  display: grid; grid-template-columns: 44px 1fr auto; gap: 12px; align-items: center;
-  background: #fff; border: 1px solid var(--border-color, #e5e7eb); border-radius: var(--radius, 12px);
-  padding: 10px 12px;
-}
-.persona-item .persona-avatar { width: 44px; height: 44px; min-width: 44px; box-shadow: none; }
-.persona-item .persona-name { font-size: 15px; }
-.persona-item .persona-role { font-size: 11px; }
-.persona-item .persona-badge { padding: 6px 8px; }
-
-/* 8) Utility helpers */
-.hidden { opacity: 0; pointer-events: none; }
-.align-right { justify-self: end; }
-.mt-8 { margin-top: 8px; } .mt-12 { margin-top: 12px; } .mt-16 { margin-top: 16px; }
 /* === 15. Onboarding-Flow Styles (NEU) === */
 
 .onboarding-overlay {
@@ -1142,7 +894,6 @@ body {
     margin: 0;
     font-weight: 600;
 }
-
 /* Hervorhebungs-Effekt */
 .highlight {
     z-index: 2001; /* Über dem Overlay */
@@ -1257,4 +1008,43 @@ body {
     border-radius: 8px;
     text-align: right;
     font-weight: 600;
+}
+/* Zusätzliche Stile für die neuen Elemente */
+.options-container { display: flex; flex-direction: column; gap: 12px; margin-top: 24px; }
+.option-button { display: block; width: 100%; padding: 16px; border: 2px solid var(--border-color); border-radius: var(--radius); font-size: 16px; font-weight: 600; text-align: center; cursor: pointer; background-color: #fff; transition: border-color 0.2s, background-color 0.2s; }
+.option-button:hover { border-color: var(--main-blue); }
+.option-button.selected { border-color: var(--main-blue); background-color: rgba(18, 35, 168, 0.1); font-weight: 700; }
+#deadline-input-container { margin-top: 20px; max-height: 0; overflow: hidden; transition: max-height 0.4s ease-in-out; }
+#deadline-input-container.visible { max-height: 100px; }
+
+/* --- Plan Display Styles (NEU) --- */
+.plan-container {
+  margin-top: 24px;
+  text-align: left;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+  background-color: #fafafa;
+}
+.milestone-item {
+  display: flex;
+  align-items: center;
+  padding: 16px;
+  gap: 16px;
+  border-bottom: 1px solid var(--border-color);
+}
+.milestone-item:last-child {
+  border-bottom: none;
+}
+.milestone-icon {
+  color: var(--main-blue);
+}
+.milestone-details h3 {
+  margin: 0 0 4px 0;
+  font-size: 16px;
+  font-weight: 700;
+}
+.milestone-details p {
+  margin: 0;
+  font-size: 14px;
+  color: var(--muted);
 }
