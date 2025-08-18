@@ -187,6 +187,8 @@
     const nextButton = document.getElementById('next-button');
     const progressLabel = document.getElementById('progress-label');
     const progressFill = document.getElementById('progress-fill');
+    const goalInput = document.getElementById('goal-input');
+    
     let currentStep = 0;
     const totalSteps = steps.length;
 
@@ -237,11 +239,11 @@
       progressFill.style.width = `${progressPercent}%`;
       progressLabel.textContent = `Schritt ${currentStep + 1} von ${totalSteps}`;
       prevButton.style.visibility = currentStep === 0 ? 'hidden' : 'visible';
-      nextButton.innerHTML = currentStep === totalSteps - 1 ? '<span>Ziel erstellen</span>' : '<span>Weiter</span><span class="material-icons">arrow_forward</span>';
+      nextButton.innerHTML = currentStep === totalSteps - 1 ? '<span>Ziel erstellen</span>' : '<span>Weiter</span><span class="material-icons">arrow_forward</span></span>';
     }
 
     nextButton.addEventListener('click', () => {
-      if (currentStep === 0) newProjectData.goal = document.getElementById('goal-input').value;
+      if (currentStep === 0) newProjectData.goal = goalInput.value;
       if (currentStep === 1 && newProjectData.deadlineType === 'user_date') newProjectData.deadline = document.getElementById('deadline-input').value;
       console.log('Aktueller Projekt-Stand:', newProjectData);
 
@@ -254,7 +256,7 @@
     function initializeWizard() { /* ... unverändert ... */ }
 
     // ===================================================================
-    // MODAL & DASHBOARD LOGIK (unverändert)
+    // MODAL & DASHBOARD LOGIK
     // ===================================================================
     const wizardModal = document.getElementById('wizard-modal');
     const openWizardBtn = document.getElementById('open-wizard-btn');
@@ -264,6 +266,14 @@
     if (hamburgerBtn) { if (window.innerWidth >= 768) { bodyEl.classList.add('sidenav-expanded'); } hamburgerBtn.addEventListener('click', () => { bodyEl.classList.toggle('sidenav-expanded'); }); }
     openWizardBtn.addEventListener('click', (e) => { e.preventDefault(); initializeWizard(); wizardModal.classList.remove('hidden'); });
     closeWizardBtn.addEventListener('click', () => { wizardModal.classList.add('hidden'); });
+    
+    // NEUE LOGIK: Enter-Taste, um zum nächsten Schritt zu springen
+    goalInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            nextButton.click();
+        }
+    });
 
     // --- Unveränderte Funktionen ---
     const deadlineOptions = document.getElementById('deadline-options');
