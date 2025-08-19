@@ -21,7 +21,16 @@ let pomodoroTimer = {
     DEFAULT_TIME: 25 * 60, // 25 Minuten in Sekunden
     timeLeft: 25 * 60,
     isRunning: false,
-    interval: null
+    interval: null,
+    activeTaskId: null
+};
+
+// Zustand für den Inbox-Verarbeitungs-Wizard
+let processWizardState = {
+    isOpen: false,
+    currentStep: 1,
+    taskId: null,
+    taskText: ''
 };
 
 // ===================================================================
@@ -55,6 +64,8 @@ document.addEventListener('DOMContentLoaded', () => {
             navigateTo('projects-content');
         }
     });
+
+    initializeQuickAdd();
 
     // Startet die App, indem das Dashboard geladen wird.
     navigateTo('dashboard');
@@ -129,8 +140,6 @@ function updateNavState() {
 function runViewSpecificScripts() {
     switch (currentView) {
         case 'dashboard-empty-content':
-            setupWizardTriggers();
-            break;
         case 'dashboard-filled-content':
             renderDashboard();
             break;
@@ -146,8 +155,8 @@ function runViewSpecificScripts() {
         case 'project-detail-content':
             renderProjectDetails();
             break;
-        case 'wizard_content':
-            initializeWizard();
+        case 'settings-content':
+            renderSettings();
             break;
     }
 }
@@ -166,6 +175,7 @@ function renderDashboard() {
         projectsGrid.innerHTML += createProjectCardHtml(project);
     });
     addProjectCardListeners();
+    setupWizardTriggers();
 }
 
 /**
@@ -186,95 +196,146 @@ function renderProjects() {
  * Rendert die Inbox-Ansicht.
  */
 function renderInbox() {
-    const inboxList = document.getElementById('inbox-list');
-    if (!inboxList) return;
-    inboxList.innerHTML = '';
-    mockDB.inboxItems.forEach(item => {
-        inboxList.innerHTML += `<div class="inbox-item" data-id="${item.id}">
-                                    <span class="inbox-item-text">${item.text}</span>
-                                    <div class="inbox-item-actions">
-                                        <button class="action-btn"><span class="material-icons">check_circle</span></button>
-                                        <button class="action-btn"><span class="material-icons">delete</span></button>
-                                    </div>
-                                </div>`;
-    });
+    const inboxListContainer = document.getElementById('inbox-list');
+    if (!inboxListContainer) return;
+    const inboxTasks = mockDB.getInboxTasks();
+    if (inboxTasks.length > 0) {
+        inboxListContainer.innerHTML = inboxTasks.map(task => `
+            <div class="inbox-item" data-task-id="${task.id}">
+                <div class="inbox-item-main">
+                    <div class="inbox-item-text">${task.text}</div>
+                    ${task.notes ? `<div class="inbox-item-notes">${task.notes}</div>` : ''}
+                    <div class="inbox-item-meta">Erstellt: ${formatRelativeTime(new Date(task.created_at))}</div>
+                </div>
+                <div class="inbox-item-actions">
+                    <button class="button-icon process-item-btn" title="Verarbeiten">
+                        <span class="material-icons">arrow_circle_right</span>
+                    </button>
+                    <button class="button-icon delete-item-btn" title="Löschen">
+                        <span class="material-icons">delete_outline</span>
+                    </button>
+                </div>
+            </div>
+        `).join('');
+    } else {
+        inboxListContainer.innerHTML = `<div class="empty-state" style="margin: auto; padding: 20px;"><p>Deine Inbox ist leer. Gut gemacht!</p></div>`;
+    }
+    addInboxListeners();
 }
 
 /**
- * Rendert die Heute-Ansicht mit Aufgaben, Scores und dem Timer.
+ * ÜBERARBEITETE FUNKTION
+ * Füllt das gesamte Tages-Cockpit mit allen neuen Statistiken.
  */
 function renderToday() {
     const todayList = document.getElementById('today-list');
-    const scoreWidgets = document.getElementById('score-widgets');
-    if (!todayList || !scoreWidgets) return;
+    const todayTopContainer = document.querySelector('.today-top-container');
 
-    // Datum aktualisieren
-    document.getElementById('current-date').textContent = new Date().toLocaleDateString('de-DE', {
-        weekday: 'long',
-        month: 'long',
-        day: 'numeric'
-    });
+    // WICHTIGER CHECK: Prüfe, ob die Elemente existieren, bevor du sie verwendest
+    if (!todayList || !todayTopContainer) return;
 
-    // Gesamtreihen-Score rendern
-    const totalStreaks = mockDB.getTotalStreaks();
-    const totalStreaksCard = `<div class="score-card">
-                                <h3>Gesamtreihen</h3>
-                                <div class="score-value">
-                                    <span class="material-icons">local_fire_department</span>
-                                    <span>${totalStreaks}</span>
-                                </div>
-                              </div>`;
-
-    // Individuelle Scores rendern
-    const chessEloCard = `<div class="score-card">
-                            <h3>Schach-Elo</h3>
-                            <div class="score-value">
-                                <span>${mockDB.todayMetrics.chessElo}</span>
-                            </div>
-                         </div>`;
-
-    const runningPaceCard = `<div class="score-card">
-                                <h3>Laufpace</h3>
-                                <div class="score-value">
-                                    <span>${mockDB.todayMetrics.runningPace}</span>
-                                </div>
-                             </div>`;
-
-    scoreWidgets.innerHTML = totalStreaksCard + chessEloCard + runningPaceCard;
-
-    // Pomodoro-Reihe rendern
-    const pomodoroStreakEl = document.getElementById('pomodoro-streak');
-    if (pomodoroStreakEl) {
-        pomodoroStreakEl.textContent = mockDB.todayMetrics.overallStreak;
+    const todayDateEl = document.getElementById('current-date');
+    if (todayDateEl) {
+      todayDateEl.textContent = new Date().toLocaleDateString('de-DE', { weekday: 'long', month: 'long', day: 'numeric' });
     }
 
-    todayList.innerHTML = '';
-    mockDB.todayTasks.forEach(task => {
-        const streakHtml = task.streak ? `<span class="streak-display"><span class="material-icons">local_fire_department</span> ${task.streak}</span>` : '';
-        todayList.innerHTML += `<div class="today-task-item ${task.completed ? 'completed' : ''}" data-id="${task.id}">
-                                    <div class="task-info">
-                                        <span class="task-checkbox"><span class="material-icons">${task.completed ? 'check' : ''}</span></span>
-                                        <span class="task-text">${task.text}</span>
-                                    </div>
-                                    <div class="task-meta">
-                                        ${task.project ? `<span class="task-project-link">Projekt: <a href="#">${task.project.name}</a></span>` : ''}
-                                        ${streakHtml}
-                                        <button class="start-task-timer-btn" title="Timer für diese Aufgabe starten">
-                                            <span class="material-icons">play_circle_outline</span>
-                                        </button>
-                                    </div>
-                                </div>`;
-    });
+    const todayTasks = mockDB.getTodayTasks();
+    const settings = mockDB.getUserSettings();
 
-    // Timer initialisieren und Event-Listener hinzufügen
-    updateTimerDisplay();
-    document.getElementById('start-pause-btn').onclick = startPauseTimer;
-    document.getElementById('reset-btn').onclick = resetTimer;
+    // Tages-Cockpit aktualisieren
+    const completedTasksCount = todayTasks.filter(t => t.completed).length;
+    const completedPomodorosCount = todayTasks.reduce((sum, task) => sum + (task.pomodoro_completed || 0), 0);
+    const activeStreaksCount = mockDB.getActiveStreaksCount();
+    const customTrackers = mockDB.getCustomTrackers();
+
+    const tasksStatEl = document.getElementById('tasks-completed-stat');
+    if (tasksStatEl && settings) {
+      tasksStatEl.textContent = `${completedTasksCount}/${settings.daily_task_goal}`;
+    }
+    const pomodorosStatEl = document.getElementById('pomodoros-completed-stat');
+    if (pomodorosStatEl && settings) {
+      pomodorosStatEl.textContent = `${completedPomodorosCount}/${settings.daily_pomodoro_goal}`;
+    }
+    const streaksStatEl = document.getElementById('active-streaks-stat');
+    if (streaksStatEl) {
+      streaksStatEl.innerHTML = `🔥 ${activeStreaksCount}`;
+    }
+
+    const trackersContainer = document.getElementById('cockpit-trackers-container');
+    if (trackersContainer) {
+        trackersContainer.innerHTML = customTrackers.map(tracker => `
+            <div class="tracker-stat">
+                <div class="stat-value">${tracker.value}</div>
+                <div class="stat-label">${tracker.name}</div>
+            </div>
+        `).join('');
+    }
+    
+    // Aufgabenliste rendern
+    if (todayTasks.length > 0) {
+        todayList.innerHTML = todayTasks.map(task => {
+            const project = task.project_id ? mockDB.getProjectById(task.project_id) : null;
+            const streak = task.recurrence_rule ? mockDB.getStreakByTaskId(task.id) : null;
+
+            return `
+                <div class="today-task-item ${task.completed ? 'completed' : ''}" data-task-id="${task.id}">
+                    <div class="task-info">
+                        <span class="task-checkbox"><span class="material-icons">${task.completed ? 'check' : ''}</span></span>
+                        <span class="task-text">${task.text}</span>
+                    </div>
+                    <div class="task-meta">
+                        ${streak ? `
+                            <div class="task-streak" title="Aktueller Streak">
+                                🔥 ${streak.current_streak}
+                            </div>
+                        ` : ''}
+                        ${task.pomodoro_estimation ? `
+                            <div class="pomodoro-count" title="Erledigte / Geschätzte Pomodoros">
+                                <span class="pomodoro-completed">${task.pomodoro_completed}</span> / <span class="pomodoro-estimated">${task.pomodoro_estimation}</span> 🍅
+                            </div>
+                        ` : ''}
+                        ${project ? `<span class="task-project-link">Projekt: <a href="#" data-project-id="${project.id}">${project.title}</a></span>` : ''}
+                        <button class="start-task-timer-btn" title="Timer für diese Aufgabe starten">
+                            <span class="material-icons">play_circle_outline</span>
+                        </button>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    } else {
+        todayList.innerHTML = `<div class="empty-state" style="margin: auto; padding: 20px;"><p>Für heute sind keine Aufgaben geplant.</p></div>`;
+    }
+    
+    addTodayListeners();
+    updateTimerDisplay(); 
+    const startPauseBtn = document.getElementById('start-pause-btn');
+    const resetBtn = document.getElementById('reset-btn');
+    if(startPauseBtn) startPauseBtn.onclick = startPauseTimer;
+    if(resetBtn) resetBtn.onclick = resetTimer;
 }
 
-/**
- * Rendert die Projekt-Detailansicht.
- */
+function renderSettings() {
+    const settings = mockDB.getUserSettings();
+    if (!settings) {
+        console.error("Benutzereinstellungen nicht gefunden!");
+        return;
+    }
+
+    const dailyTasksGoalEl = document.getElementById('daily-tasks-goal');
+    if (dailyTasksGoalEl) dailyTasksGoalEl.value = settings.daily_task_goal;
+
+    const dailyPomodorosGoalEl = document.getElementById('daily-pomodoros-goal');
+    if (dailyPomodorosGoalEl) dailyPomodorosGoalEl.value = settings.daily_pomodoro_goal;
+    
+    const vacationToggle = document.getElementById('vacation-mode-toggle');
+    if (vacationToggle) {
+      vacationToggle.checked = settings.vacation_mode_active;
+    }
+    
+    addSettingsListeners();
+    toggleVacationDatesContainer(settings.vacation_mode_active);
+}
+
 function renderProjectDetails() {
     if (!currentProjectId) return;
     const project = mockDB.getProjectById(currentProjectId);
@@ -282,35 +343,38 @@ function renderProjectDetails() {
 
     document.getElementById('project-title').textContent = project.title;
 
-    // Fortschrittsbalken aktualisieren
     const progress = mockDB.calculateProjectProgress(currentProjectId);
-    document.getElementById('project-progress-fill').style.width = `${progress}%`;
+    const progressBar = document.getElementById('project-progress-fill');
+    if (progressBar) {
+        progressBar.style.width = `${progress}%`;
+    }
 
-    // Timeline rendern
     const timelineContainer = document.getElementById('project-timeline');
     if (!timelineContainer) return;
     timelineContainer.innerHTML = '';
+    
+    const projectTasks = mockDB.getTasksByProjectId(currentProjectId);
+    
     project.milestones.forEach(milestone => {
-        timelineContainer.innerHTML += `<div class="milestone ${milestone.status === 'current' ? 'current' : ''}">
+        timelineContainer.innerHTML += `<div class="milestone">
                                             <div class="milestone__line"></div>
-                                            <div class="milestone__icon"><span class="material-icons">${milestone.status === 'current' ? 'flag' : 'tour'}</span></div>
+                                            <div class="milestone__icon"><span class="material-icons">flag</span></div>
                                             <div class="milestone__content">
                                                 <div class="milestone__header">
                                                     <h3>${milestone.title}</h3>
                                                     <span>${milestone.order}. Meilenstein</span>
                                                 </div>
-                                                ${createTaskListHtml(milestone, project.id)}
+                                                ${createTaskListHtml(milestone, projectTasks)}
                                             </div>
                                         </div>`;
     });
-
-    // Event-Listener für die Checkboxen der Aufgaben hinzufügen
     addTaskListeners();
 }
 
 // ===================================================================
 // HILFS- & WIZARD-FUNKTIONEN
 // ===================================================================
+
 /**
  * Erstellt den HTML-Code für eine Projektkarte.
  * @param {object} project - Das Projekt-Objekt aus der mockDB.
@@ -319,40 +383,48 @@ function renderProjectDetails() {
 function createProjectCardHtml(project) {
     const progress = mockDB.calculateProjectProgress(project.id);
     const context = mockDB.getContextById(project.context_id);
-    const nextMilestone = project.milestones.find(m => m.status === 'current');
-    const projectLinkClass = project.status === 'active' ? 'project-card' : 'project-card-placeholder';
-    return `<div class="${projectLinkClass}" data-project-id="${project.id}">
-                ${context ? `<div class="card-context">${context.emoji} ${context.title}</div>` : ''}
-                <div class="card-header">
-                    <h2 class="project-title">${project.title}</h2>
-                    <span class="material-icons card-menu">more_vert</span>
+    const projectTasks = mockDB.getTasksByProjectId(project.id);
+    const nextTask = projectTasks.find(t => !t.completed);
+
+    return `
+        <div class="project-card" data-project-id="${project.id}">
+            ${context ? `<div class="card-context">${context.emoji} ${context.title}</div>` : ''}
+            <div class="card-header">
+                <h3 class="project-title">${project.title}</h3>
+                <span class="material-icons card-menu">more_horiz</span>
+            </div>
+            <div class="card-body">
+                ${nextTask ? `
+                    <p class="next-milestone">NÄCHSTER SCHRITT</p>
+                    <h4 class="milestone-title">${nextTask.text}</h4>
+                ` : '<p>Alle Aufgaben erledigt!</p>'}
+            </div>
+            <div class="card-footer">
+                <div class="progress-info">
+                    <span class="progress-label">Fortschritt</span>
+                    <span class="progress-percent">${progress}%</span>
                 </div>
-                <div class="card-body">
-                    ${nextMilestone ? `<p class="next-milestone">Nächster Meilenstein</p><h3 class="milestone-title">${nextMilestone.title}</h3>` : ''}
+                <div class="card-progress-bar">
+                    <div class="card-progress-fill" style="width: ${progress}%;"></div>
                 </div>
-                <div class="card-footer">
-                    <div class="progress-info">
-                        <span class="progress-label">Fortschritt</span>
-                        <span class="progress-percent">${progress}%</span>
-                    </div>
-                    <div class="card-progress-bar">
-                        <div class="card-progress-fill" style="width: ${progress}%"></div>
-                    </div>
-                </div>
-            </div>`;
+            </div>
+        </div>
+    `;
 }
 
 /**
  * Erstellt den HTML-Code für eine Aufgabenliste innerhalb eines Meilensteins.
  * @param {object} milestone - Der Meilenstein, der die Aufgaben enthält.
- * @param {string} projectId - Die ID des übergeordneten Projekts.
+ * @param {array} allProjectTasks - Alle Aufgaben des Projekts.
  * @returns {string} - Der generierte HTML-String.
  */
-function createTaskListHtml(milestone, projectId) {
-    if (!milestone.tasks || milestone.tasks.length === 0) return `<p style="font-style: italic; color: var(--muted); margin-top: 12px;">Keine Aufgaben definiert.</p>`;
+function createTaskListHtml(milestone, allProjectTasks) {
+    const milestoneTasks = allProjectTasks.filter(t => t.milestone_id === milestone.id);
+    
+    if (!milestoneTasks || milestoneTasks.length === 0) return `<p style="font-style: italic; color: var(--muted); margin-top: 12px;">Keine Aufgaben definiert.</p>`;
     let html = '<ul class="task-list">';
-    milestone.tasks.forEach(task => {
-        html += `<li class="task-item ${task.completed ? 'completed' : ''}" data-project-id="${projectId}" data-milestone-id="${milestone.id}" data-task-id="${task.id}">
+    milestoneTasks.forEach(task => {
+        html += `<li class="task-item ${task.completed ? 'completed' : ''}" data-task-id="${task.id}">
                     <span class="task-checkbox"><span class="material-icons">${task.completed ? 'check' : ''}</span></span>
                     <span class="task-text">${task.text}</span>
                 </li>`;
@@ -361,35 +433,25 @@ function createTaskListHtml(milestone, projectId) {
     return html;
 }
 
-/**
- * Fügt Event-Listener zu allen Projektkarten hinzu.
- */
 function addProjectCardListeners() {
     document.querySelectorAll('.project-card').forEach(card => {
-        card.addEventListener('click', (e) => {
-            if (!e.target.closest('.card-menu')) {
-                navigateTo('project-detail-content', {
-                    projectId: card.dataset.projectId
-                });
+        card.addEventListener('click', () => {
+            const projectId = card.dataset.projectId;
+            if (projectId) {
+                navigateTo('project-detail-content', { projectId });
             }
         });
     });
 }
-
-/**
- * Fügt Event-Listener für das Toggle von Aufgaben-Checkboxen hinzu.
- */
 function addTaskListeners() {
     document.querySelectorAll('.task-item').forEach(taskItem => {
         taskItem.addEventListener('click', (e) => {
-            const projectId = taskItem.dataset.projectId;
-            const milestoneId = taskItem.dataset.milestoneId;
             const taskId = taskItem.dataset.taskId;
-            if (mockDB.toggleTaskCompleted(projectId, milestoneId, taskId)) {
+            if (mockDB.toggleTaskCompleted(taskId)) {
                 taskItem.classList.toggle('completed');
-                const project = mockDB.getProjectById(projectId);
+                const project = mockDB.getProjectById(currentProjectId);
                 if (project) {
-                    const progress = mockDB.calculateProjectProgress(projectId);
+                    const progress = mockDB.calculateProjectProgress(currentProjectId);
                     const progressBar = document.getElementById('project-progress-fill');
                     if (progressBar) {
                         progressBar.style.width = `${progress}%`;
@@ -400,218 +462,185 @@ function addTaskListeners() {
     });
 }
 
-/**
- * Richtet die Event-Listener für die Wizard-Buttons ein.
- */
 function setupWizardTriggers() {
-    const emptyStateBtn = document.getElementById('open-wizard-btn');
-    if (emptyStateBtn) {
-        emptyStateBtn.onclick = () => navigateTo('wizard_content');
-    }
-    const projectsAddBtn = document.getElementById('open-wizard-btn-projects');
-    if (projectsAddBtn) {
-        projectsAddBtn.onclick = () => navigateTo('wizard_content');
-    }
-    const filledStateBtn = document.getElementById('open-wizard-btn-filled');
-    if (filledStateBtn) {
-        filledStateBtn.onclick = () => navigateTo('wizard_content');
+    document.querySelectorAll('#open-wizard-btn, #open-wizard-btn-filled, #open-wizard-btn-projects').forEach(btn => {
+        if(btn) {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                startProjectWizard();
+            });
+        }
+    });
+}
+
+/**
+ * NEU: Startet den Projekt-Erstellungs-Wizard
+ */
+async function startProjectWizard() {
+    try {
+        const response = await fetch('wizard_content.html');
+        if (!response.ok) throw new Error('Wizard-Datei nicht gefunden');
+        const wizardHtml = await response.text();
+        document.body.insertAdjacentHTML('beforeend', wizardHtml);
+        initializeWizard();
+    } catch (error) {
+        console.error("Fehler beim Laden des Wizards:", error);
     }
 }
 
-// ===================================================================
-// WIZARD-LOGIK
-// ===================================================================
-// Wizard-Schritte und Zustand
-let wizardStep = 0;
-const totalSteps = 5;
-
+/**
+ * NEU: Initialisiert den Projekt-Erstellungs-Wizard
+ */
 function initializeWizard() {
-    // Initialisiert den Wizard-Zustand, wenn er geladen wird
-    wizardStep = 0;
-    document.querySelectorAll('.wizard-step').forEach((step, index) => {
-        step.classList.toggle('hidden', index !== 0);
-    });
-    updateWizardState();
-    setupWizardNavigation();
+    // Setzt die initialen Wizard-Daten zurück
+    newProjectData = {
+        goal: null, deadline: null, deadlineType: null,
+        startingPoint: null, generatedPlan: null, wizardType: null,
+        context_id: null
+    };
 
-    // Event-Listener für die dynamischen Optionen
-    document.getElementById('step-0').addEventListener('click', (e) => {
-        if (e.target.dataset.wizardType) {
-            newProjectData.wizardType = e.target.dataset.wizardType;
-            nextStep();
-            if (newProjectData.wizardType === 'manual') {
-                document.getElementById('goal-input').placeholder = "Gib dein Ziel ein...";
-            } else {
-                document.getElementById('goal-input').placeholder = "Ich möchte einen Marathon laufen...";
+    let wizardStep = 0;
+    const totalSteps = 5;
+
+    // Helper function to update wizard UI based on current step
+    function updateWizardUI() {
+        const progressLabel = document.getElementById('progress-label');
+        const progressFill = document.getElementById('progress-fill');
+        const prevButton = document.getElementById('prev-button');
+        const nextButton = document.getElementById('next-button');
+        const wizardModal = document.getElementById('wizard-modal');
+    
+        if (!wizardModal) return;
+        
+        // Hide all steps first
+        document.querySelectorAll('.wizard-step').forEach(step => step.classList.add('hidden'));
+        document.getElementById(`step-${wizardStep}`).classList.remove('hidden');
+
+        progressLabel.textContent = `Schritt ${wizardStep + 1} von ${totalSteps}`;
+        progressFill.style.width = `${(wizardStep / totalSteps) * 100}%`;
+
+        // Button states
+        prevButton.disabled = wizardStep === 0;
+        prevButton.classList.toggle('hidden', wizardStep === 0);
+        nextButton.disabled = true; // Default to disabled
+
+        if (wizardStep === 0) {
+            nextButton.disabled = newProjectData.wizardType === null;
+        } else if (wizardStep === 1) {
+            nextButton.disabled = !newProjectData.goal || newProjectData.goal.length < 5;
+        } else if (wizardStep === 2) {
+            nextButton.disabled = !newProjectData.context_id;
+        } else if (wizardStep === 3) {
+            nextButton.disabled = !newProjectData.deadlineType || (newProjectData.deadlineType === 'user_date' && !newProjectData.deadline);
+        } else if (wizardStep === 4) {
+            nextButton.disabled = !newProjectData.startingPoint;
+        } else if (wizardStep === 5) {
+            nextButton.textContent = 'Fertigstellen';
+            nextButton.innerHTML = `<span>Fertigstellen</span><span class="material-icons">check_circle_outline</span>`;
+            nextButton.disabled = false;
+        }
+    }
+    
+    function nextStep() {
+        if (wizardStep < totalSteps) {
+            wizardStep++;
+            updateWizardUI();
+            
+            // Dynamische Inhalte laden
+            if (wizardStep === 2) populateContextOptions();
+            else if (wizardStep === 4) populateAusgangslageOptions();
+            else if (wizardStep === 5) {
+                if (newProjectData.wizardType === 'ai') generateAiPlan();
+                else createManualPlanPlaceholder();
             }
+        } else if (wizardStep === totalSteps) {
+            createNewProject();
+            closeWizard();
+            // NEU: Navigiere zum Dashboard, um den Refresh zu erzwingen
+            navigateTo('dashboard');
+        }
+    }
+    
+    function prevStep() {
+        if (wizardStep > 0) {
+            wizardStep--;
+            updateWizardUI();
+        }
+    }
+
+    function closeWizard() {
+        const wizardModal = document.getElementById('wizard-modal');
+        if (wizardModal) {
+            wizardModal.remove();
+        }
+    }
+    
+    document.getElementById('close-wizard-btn')?.addEventListener('click', closeWizard);
+    document.getElementById('prev-button')?.addEventListener('click', prevStep);
+    document.getElementById('next-button')?.addEventListener('click', nextStep);
+
+    // Step-specific listeners
+    document.getElementById('step-0').addEventListener('click', (e) => {
+        const type = e.target.closest('[data-wizard-type]');
+        if (type) {
+            newProjectData.wizardType = type.dataset.wizardType;
+            nextStep();
         }
     });
-
-    document.getElementById('step-1').addEventListener('input', (e) => {
+    
+    document.getElementById('goal-input').addEventListener('input', (e) => {
         newProjectData.goal = e.target.value;
-        updateWizardState();
+        updateWizardUI();
     });
-
+    
     document.getElementById('step-2').addEventListener('click', (e) => {
-        const contextButton = e.target.closest('.option-button');
-        if (contextButton) {
+        const contextBtn = e.target.closest('[data-value]');
+        if (contextBtn) {
             document.querySelectorAll('#context-options .option-button').forEach(btn => btn.classList.remove('selected'));
-            contextButton.classList.add('selected');
-            newProjectData.context_id = contextButton.dataset.value;
-            updateWizardState();
+            contextBtn.classList.add('selected');
+            newProjectData.context_id = contextBtn.dataset.value;
+            updateWizardUI();
         }
     });
 
     document.getElementById('step-3').addEventListener('click', (e) => {
-        const deadlineButton = e.target.closest('.option-button');
-        if (deadlineButton) {
+        const deadlineBtn = e.target.closest('[data-value]');
+        if (deadlineBtn) {
             document.querySelectorAll('#deadline-options .option-button').forEach(btn => btn.classList.remove('selected'));
-            deadlineButton.classList.add('selected');
-            newProjectData.deadlineType = deadlineButton.dataset.value;
-            const deadlineInputContainer = document.getElementById('deadline-input-container');
-            deadlineInputContainer.classList.toggle('visible', newProjectData.deadlineType === 'user_date');
-            if (newProjectData.deadlineType === 'user_date') {
-                document.getElementById('deadline-input').focus();
-            } else {
-                newProjectData.deadline = null;
-                updateWizardState();
-            }
+            deadlineBtn.classList.add('selected');
+            newProjectData.deadlineType = deadlineBtn.dataset.value;
+            const inputContainer = document.getElementById('deadline-input-container');
+            inputContainer.classList.toggle('visible', newProjectData.deadlineType === 'user_date');
+            updateWizardUI();
         }
     });
     document.getElementById('deadline-input').addEventListener('input', (e) => {
         newProjectData.deadline = e.target.value;
-        updateWizardState();
+        updateWizardUI();
     });
-
+    
     document.getElementById('step-4').addEventListener('click', (e) => {
-        const ausgangslageButton = e.target.closest('.option-button');
-        if (ausgangslageButton) {
+        const startingPointBtn = e.target.closest('[data-value]');
+        if (startingPointBtn) {
             document.querySelectorAll('#ausgangslage-options .option-button').forEach(btn => btn.classList.remove('selected'));
-            ausgangslageButton.classList.add('selected');
-            newProjectData.startingPoint = ausgangslageButton.dataset.value;
-            updateWizardState();
+            startingPointBtn.classList.add('selected');
+            newProjectData.startingPoint = startingPointBtn.dataset.value;
+            updateWizardUI();
         }
     });
-}
-
-function setupWizardNavigation() {
-    const prevButton = document.getElementById('prev-button');
-    const nextButton = document.getElementById('next-button');
-    const closeButton = document.getElementById('close-wizard-btn');
-
-    prevButton.onclick = prevStep;
-    nextButton.onclick = nextStep;
-    closeButton.onclick = () => navigateTo('dashboard');
+    
+    updateWizardUI();
 }
 
 /**
- * Aktualisiert den Fortschrittsbalken und die Navigationsbuttons des Wizards.
- */
-function updateWizardState() {
-    const progressLabel = document.getElementById('progress-label');
-    const progressFill = document.getElementById('progress-fill');
-    const prevButton = document.getElementById('prev-button');
-    const nextButton = document.getElementById('next-button');
-
-    // Fortschrittsbalken
-    progressLabel.textContent = `Schritt ${wizardStep + 1} von ${totalSteps}`;
-    progressFill.style.width = `${(wizardStep / totalSteps) * 100}%`;
-
-    // Buttons
-    prevButton.disabled = wizardStep === 0;
-    prevButton.classList.toggle('hidden', wizardStep === 0);
-    nextButton.disabled = true;
-    nextButton.textContent = 'Weiter';
-    nextButton.innerHTML = `<span>Weiter</span><span class="material-icons">arrow_forward</span>`;
-
-    // Validierungslogik für den "Weiter"-Button
-    if (wizardStep === 0) {
-        nextButton.disabled = newProjectData.wizardType === null;
-    } else if (wizardStep === 1) {
-        nextButton.disabled = !newProjectData.goal || newProjectData.goal.length < 5;
-    } else if (wizardStep === 2) {
-        if (newProjectData.wizardType === 'ai') {
-            nextButton.disabled = !newProjectData.context_id;
-        } else {
-            nextButton.disabled = false; // Manuell kann man diesen Schritt überspringen
-        }
-    } else if (wizardStep === 3) {
-        if (newProjectData.deadlineType === 'user_date') {
-            nextButton.disabled = !newProjectData.deadline;
-        } else {
-            nextButton.disabled = false; // Vorgegebene Deadline kann übersprungen werden
-        }
-    } else if (wizardStep === 4) {
-        nextButton.disabled = !newProjectData.startingPoint;
-        if (!nextButton.disabled) {
-            if (newProjectData.wizardType === 'ai') {
-                nextButton.innerHTML = `<span>Roadmap erstellen</span><span class="material-icons">rocket_launch</span>`;
-            } else {
-                nextButton.innerHTML = `<span>Projekt erstellen</span><span class="material-icons">topic</span>`;
-            }
-        }
-    } else if (wizardStep === 5) {
-        nextButton.textContent = 'Fertigstellen';
-        nextButton.innerHTML = `<span>Fertigstellen</span><span class="material-icons">check_circle_outline</span>`;
-        nextButton.disabled = false;
-    }
-}
-
-/**
- * Geht zum nächsten Schritt im Wizard.
- */
-function nextStep() {
-    if (wizardStep < totalSteps) {
-        // Logik für den Übergang
-        document.getElementById(`step-${wizardStep}`).classList.add('hidden');
-        wizardStep++;
-        document.getElementById(`step-${wizardStep}`).classList.remove('hidden');
-
-        // Dynamische Inhalte laden
-        if (wizardStep === 2) {
-            populateContextOptions();
-        } else if (wizardStep === 4) {
-            populateAusgangslageOptions();
-        } else if (wizardStep === 5) {
-            if (newProjectData.wizardType === 'ai') {
-                generateAiPlan();
-            } else {
-                createNewProject();
-                navigateTo('project-detail-content', {
-                    projectId: newProjectData.projectId
-                });
-            }
-        }
-    } else if (wizardStep === totalSteps) {
-        createNewProject();
-        navigateTo('project-detail-content', {
-            projectId: newProjectData.projectId
-        });
-    }
-    updateWizardState();
-}
-
-/**
- * Geht zum vorherigen Schritt im Wizard.
- */
-function prevStep() {
-    if (wizardStep > 0) {
-        document.getElementById(`step-${wizardStep}`).classList.add('hidden');
-        wizardStep--;
-        document.getElementById(`step-${wizardStep}`).classList.remove('hidden');
-    }
-    updateWizardState();
-}
-
-/**
- * Erstellt ein neues Projekt basierend auf den Wizard-Daten.
+ * NEU: Erstellt ein neues Projekt und fügt es zur mockDB hinzu.
  */
 function createNewProject() {
     const projectTitle = newProjectData.goal;
     let milestones = newProjectData.generatedPlan;
     if (!milestones) {
-        // Manuelle Erstellung: Standard-Template nutzen
-        milestones = mockDB.planTemplates.standard;
+        // Fallback für manuelle Erstellung
+        milestones = [{ title: 'Erster Meilenstein', duration: 'Woche 1' }]; 
     }
     const newProject = mockDB.addProject({
         title: projectTitle,
@@ -619,10 +648,11 @@ function createNewProject() {
         milestones: milestones
     });
     newProjectData.projectId = newProject.id;
+    console.log("Neues Projekt erstellt:", newProject);
 }
 
 /**
- * Füllt die Kontext-Optionen in Schritt 2 dynamisch.
+ * NEU: Füllt den Kontext-Auswahlschritt des Wizards.
  */
 function populateContextOptions() {
     const optionsContainer = document.getElementById('context-options');
@@ -633,14 +663,18 @@ function populateContextOptions() {
 }
 
 /**
- * Füllt die Ausgangslage-Optionen in Schritt 4 dynamisch.
+ * NEU: Füllt den Ausgangslage-Schritt des Wizards.
  */
 function populateAusgangslageOptions() {
     const optionsContainer = document.getElementById('ausgangslage-options');
     optionsContainer.innerHTML = '';
-    const relevantTemplates = mockDB.planTemplates[newProjectData.context_id] ?
-        mockDB.ausgangslage[mockDB.contexts.find(c => c.id === newProjectData.context_id).title.toLowerCase().split(' ')[0]] : // Annahme: Schlüssel ist der erste Teil des Titels, z.B. 'laufen'
-        mockDB.ausgangslage.standard;
+    const contextId = newProjectData.context_id;
+    const context = mockDB.contexts.find(c => c.id === contextId);
+    
+    let relevantTemplates = mockDB.ausgangslage.standard;
+    if (context && mockDB.ausgangslage[context.title.toLowerCase().split(' ')[0]]) {
+        relevantTemplates = mockDB.ausgangslage[context.title.toLowerCase().split(' ')[0]];
+    }
 
     relevantTemplates.forEach(template => {
         optionsContainer.innerHTML += `<button type="button" class="option-button" data-value="${template.id}">${template.text}</button>`;
@@ -648,16 +682,24 @@ function populateAusgangslageOptions() {
 }
 
 /**
- * Simuliert die KI-Plan-Generierung und zeigt das Ergebnis an.
+ * NEU: Simuliert die KI-Plan-Generierung.
  */
 function generateAiPlan() {
     const planDisplay = document.getElementById('plan-display-container');
-    const templateData = mockDB.planTemplates[newProjectData.context_id] ?
-        mockDB.planTemplates[newProjectData.context_id][newProjectData.startingPoint] :
+    const context = mockDB.contexts.find(c => c.id === newProjectData.context_id);
+    const contextKey = context ? context.title.toLowerCase().split(' ')[0] : 'standard';
+
+    let templateData = mockDB.planTemplates[contextKey] ?
+        mockDB.planTemplates[contextKey][newProjectData.startingPoint] :
         mockDB.planTemplates.standard;
+
+    if (!templateData) {
+        templateData = mockDB.planTemplates.standard;
+    }
+    
     planDisplay.innerHTML = '';
     let html = '';
-    templateData.forEach((milestone, index) => {
+    templateData.forEach((milestone) => {
         html += `<div class="milestone-item">
                     <span class="material-icons milestone-icon">tour</span>
                     <div class="milestone-details">
@@ -670,12 +712,56 @@ function generateAiPlan() {
     newProjectData.generatedPlan = templateData;
 }
 
-// ===================================================================
-// POMODORO TIMER LOGIK
-// ===================================================================
 /**
- * Startet oder pausiert den Pomodoro-Timer.
+ * NEU: Zeigt einen Platzhalter für die manuelle Planerstellung an.
  */
+function createManualPlanPlaceholder() {
+    const planDisplay = document.getElementById('plan-display-container');
+    planDisplay.innerHTML = `
+        <div class="empty-state">
+            <p>Du kannst die Meilensteine für dein Projekt nun manuell in der Detailansicht hinzufügen.</p>
+        </div>
+    `;
+    newProjectData.generatedPlan = [{ title: 'Dein erster Meilenstein', duration: 'Woche 1' }];
+}
+
+
+function addTodayListeners() {
+    document.querySelectorAll('.today-task-item').forEach(item => {
+        item.querySelector('.task-checkbox').addEventListener('click', () => {
+            const taskId = item.dataset.taskId;
+            mockDB.toggleTaskCompleted(taskId);
+            renderToday();
+        });
+
+        const projectLink = item.querySelector('.task-project-link a');
+        if (projectLink) {
+            projectLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                navigateTo('project-detail-content', { projectId: projectLink.dataset.projectId });
+            });
+        }
+        
+        item.querySelector('.start-task-timer-btn').addEventListener('click', (e) => {
+            e.stopPropagation();
+            const taskId = item.dataset.taskId;
+            startTimerForTask(taskId);
+        });
+    });
+}
+
+function startTimerForTask(taskId) {
+    if (pomodoroTimer.isRunning && pomodoroTimer.activeTaskId === taskId) {
+        startPauseTimer();
+        return;
+    }
+    resetTimer();
+    pomodoroTimer.activeTaskId = taskId;
+    document.querySelector(`.today-task-item[data-task-id="${taskId}"]`)?.classList.add('task-in-progress');
+    startPauseTimer();
+}
+
 function startPauseTimer() {
     const startPauseBtn = document.getElementById('start-pause-btn');
     pomodoroTimer.isRunning = !pomodoroTimer.isRunning;
@@ -687,41 +773,304 @@ function startPauseTimer() {
         startPauseBtn.innerHTML = `<span class="material-icons">play_arrow</span> Start`;
         clearInterval(pomodoroTimer.interval);
     }
+    if (pomodoroTimer.activeTaskId) {
+        const activeTaskEl = document.querySelector(`.today-task-item[data-task-id="${pomodoroTimer.activeTaskId}"]`);
+        activeTaskEl?.classList.toggle('task-in-progress', pomodoroTimer.isRunning);
+    }
 }
-
-/**
- * Setzt den Pomodoro-Timer zurück.
- */
 function resetTimer() {
     clearInterval(pomodoroTimer.interval);
     pomodoroTimer.isRunning = false;
     pomodoroTimer.timeLeft = pomodoroTimer.DEFAULT_TIME;
+    pomodoroTimer.activeTaskId = null;
+    document.querySelectorAll('.task-in-progress').forEach(el => el.classList.remove('task-in-progress'));
     updateTimerDisplay();
     document.getElementById('start-pause-btn').innerHTML = `<span class="material-icons">play_arrow</span> Start`;
 }
-
-/**
- * Verringert die verbleibende Zeit im Timer jede Sekunde.
- */
 function tick() {
     pomodoroTimer.timeLeft--;
     updateTimerDisplay();
-
     if (pomodoroTimer.timeLeft <= 0) {
         clearInterval(pomodoroTimer.interval);
         pomodoroTimer.isRunning = false;
-        // Ersetze alert() durch eine schönere UI-Benachrichtigung
-        alert("Zeit abgelaufen! Zeit für eine Pause.");
+        if (pomodoroTimer.activeTaskId) {
+            const task = mockDB.getTaskById(pomodoroTimer.activeTaskId);
+            if (task) {
+                mockDB.updateTask(pomodoroTimer.activeTaskId, { pomodoro_completed: task.pomodoro_completed + 1 });
+            }
+        }
+        alert("Pomodoro-Einheit abgeschlossen! Zeit für eine Pause.");
+        resetTimer(); 
+        renderToday();
     }
 }
-
-/**
- * Aktualisiert die Anzeige des Timers.
- */
 function updateTimerDisplay() {
     const timerDisplay = document.getElementById('timer-display');
     if (!timerDisplay) return;
     const minutes = Math.floor(pomodoroTimer.timeLeft / 60);
     const seconds = pomodoroTimer.timeLeft % 60;
     timerDisplay.textContent = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+}
+function initializeQuickAdd() {
+    const quickAddBtn = document.getElementById('quick-add-btn');
+    const closeBtn = document.getElementById('close-quick-add-btn');
+    const saveBtn = document.getElementById('save-quick-add-btn');
+    const modal = document.getElementById('quick-add-modal');
+    const input = document.getElementById('quick-add-input');
+
+    if (quickAddBtn) quickAddBtn.addEventListener('click', openQuickAddModal);
+    if (closeBtn) closeBtn.addEventListener('click', closeQuickAddModal);
+    if (saveBtn) saveBtn.addEventListener('click', saveQuickAddItem);
+
+    if (modal) {
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                closeQuickAddModal();
+            }
+        });
+    }
+}
+function openQuickAddModal() {
+    const modal = document.getElementById('quick-add-modal');
+    if (modal) {
+        modal.classList.remove('hidden');
+        document.getElementById('quick-add-input').focus();
+    }
+}
+function closeQuickAddModal() {
+    const modal = document.getElementById('quick-add-modal');
+    if (modal) {
+        modal.classList.add('hidden');
+        document.getElementById('quick-add-input').value = '';
+    }
+}
+function saveQuickAddItem() {
+    const input = document.getElementById('quick-add-input');
+    const text = input.value.trim();
+    if (text) {
+        mockDB.addTask({ text: text });
+        closeQuickAddModal();
+        if (currentView === 'inbox-content') renderInbox();
+    }
+}
+function addInboxListeners() {
+    const addBtn = document.getElementById('inbox-add-btn');
+    const inputField = document.getElementById('inbox-input-field');
+    if (addBtn && inputField) {
+        addBtn.addEventListener('click', () => {
+            const text = inputField.value.trim();
+            if (text) {
+                mockDB.addTask({ text: text });
+                inputField.value = '';
+                renderInbox();
+            }
+        });
+        inputField.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') addBtn.click();
+        });
+    }
+
+    document.querySelectorAll('.delete-item-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const itemElement = e.currentTarget.closest('.inbox-item');
+            const taskId = itemElement.dataset.taskId;
+            if (confirm(`Möchtest du diesen Eintrag wirklich löschen?`)) {
+                mockDB.deleteTask(taskId);
+                renderInbox();
+            }
+        });
+    });
+
+    document.querySelectorAll('.process-item-btn, #process-inbox-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const itemElement = e.currentTarget.closest('.inbox-item');
+            const taskId = itemElement ? itemElement.dataset.taskId : mockDB.getInboxTasks()[0]?.id;
+            if (taskId) {
+                startProcessWizard(taskId);
+            } else {
+                alert("Deine Inbox ist bereits leer!");
+            }
+        });
+    });
+}
+function addSettingsListeners() {
+    const vacationToggle = document.getElementById('vacation-mode-toggle');
+    if (vacationToggle) {
+        vacationToggle.addEventListener('change', (e) => {
+            const isChecked = e.target.checked;
+            toggleVacationDatesContainer(isChecked);
+            console.log("Urlaubsmodus geändert auf:", isChecked);
+        });
+    }
+}
+function toggleVacationDatesContainer(show) {
+    const container = document.getElementById('vacation-dates-container');
+    if (container) {
+        container.classList.toggle('hidden', !show);
+    }
+}
+async function startProcessWizard(taskId) {
+    if (processWizardState.isOpen) return;
+
+    try {
+        const response = await fetch('inbox_wizard_content.html');
+        if (!response.ok) throw new Error('Wizard-Datei nicht gefunden');
+        const wizardHtml = await response.text();
+        document.body.insertAdjacentHTML('beforeend', wizardHtml);
+    } catch (error) {
+        console.error("Fehler beim Laden des Wizards:", error);
+        return;
+    }
+    
+    const task = mockDB.getTaskById(taskId);
+    if (!task) {
+        console.error("Aufgabe für Wizard nicht gefunden");
+        return;
+    }
+
+    processWizardState = { isOpen: true, currentStep: 1, taskId: taskId, taskText: task.text };
+
+    document.getElementById('process-wizard-task-text').textContent = task.text;
+    document.getElementById('close-process-wizard-btn').addEventListener('click', closeProcessWizard);
+    
+    setupProcessWizardStep(1);
+}
+function closeProcessWizard() {
+    const wizard = document.getElementById('process-wizard-modal');
+    if (wizard) wizard.remove();
+    processWizardState = { isOpen: false, currentStep: 1, taskId: null, taskText: '' };
+    if(currentView === 'inbox-content') renderInbox();
+}
+function goToProcessStep(step) {
+    document.querySelectorAll('#process-wizard-modal .wizard-step').forEach(s => s.classList.add('hidden'));
+    document.getElementById(`process-step-${step}`).classList.remove('hidden');
+    
+    const prevButton = document.getElementById('process-prev-button');
+    prevButton.classList.toggle('hidden', step === 1);
+
+    processWizardState.currentStep = step;
+    setupProcessWizardStep(step);
+}
+function setupProcessWizardStep(step) {
+    const wizard = document.getElementById('process-wizard-modal');
+    if (!wizard) return;
+
+    document.getElementById('process-prev-button').onclick = () => {
+        if (processWizardState.currentStep > 1) goToProcessStep(processWizardState.currentStep - 1);
+    };
+
+    switch(step) {
+        case 1:
+            wizard.querySelector('[data-action="is_task"]').onclick = () => goToProcessStep(2);
+            wizard.querySelector('[data-action="is_note"]').onclick = () => {
+                alert("Diese Funktion (als Notiz speichern) wird in einer zukünftigen Version hinzugefügt.");
+                closeProcessWizard();
+            };
+            wizard.querySelector('[data-action="trash"]').onclick = () => {
+                mockDB.deleteTask(processWizardState.taskId);
+                closeProcessWizard();
+            };
+            break;
+        case 2:
+            wizard.querySelector('[data-action="new_project"]').onclick = () => {
+                document.getElementById('new-project-input-container').classList.remove('hidden');
+                document.getElementById('new-project-name').value = processWizardState.taskText;
+            };
+            wizard.querySelector('[data-action="single_task"]').onclick = () => goToProcessStep(3);
+            break;
+        case 3:
+            const projects = mockDB.getActiveProjects();
+            const container = document.getElementById('project-list-container');
+            container.innerHTML = projects.map(p => `
+                <button type="button" class="option-button" data-project-id="${p.id}">
+                     ${mockDB.getContextById(p.context_id)?.emoji || '📁'} ${p.title}
+                </button>
+            `).join('');
+            
+            container.querySelectorAll('.option-button').forEach(btn => {
+                btn.onclick = () => {
+                    mockDB.updateTask(processWizardState.taskId, { project_id: btn.dataset.projectId });
+                    closeProcessWizard();
+                };
+            });
+
+            wizard.querySelector('[data-action="standalone_task"]').onclick = () => {
+                alert("Aufgabe bleibt in der allgemeinen Liste.");
+                closeProcessWizard();
+            };
+            break;
+    }
+}
+
+/**
+ * ÜBERARBEITETE HILFSFUNKTION
+ * @param {object} project 
+ * @returns {string} 
+ */
+function createProjectCardHtml(project) {
+    const progress = mockDB.calculateProjectProgress(project.id);
+    const context = mockDB.getContextById(project.context_id);
+    const projectTasks = mockDB.getTasksByProjectId(project.id);
+    const nextTask = projectTasks.find(t => !t.completed);
+
+    return `
+        <div class="project-card" data-project-id="${project.id}">
+            ${context ? `<div class="card-context">${context.emoji} ${context.title}</div>` : ''}
+            <div class="card-header">
+                <h3 class="project-title">${project.title}</h3>
+                <span class="material-icons card-menu">more_horiz</span>
+            </div>
+            <div class="card-body">
+                ${nextTask ? `
+                    <p class="next-milestone">NÄCHSTER SCHRITT</p>
+                    <h4 class="milestone-title">${nextTask.text}</h4>
+                ` : '<p>Alle Aufgaben erledigt!</p>'}
+            </div>
+            <div class="card-footer">
+                <div class="progress-info">
+                    <span class="progress-label">Fortschritt</span>
+                    <span class="progress-percent">${progress}%</span>
+                </div>
+                <div class="card-progress-bar">
+                    <div class="card-progress-fill" style="width: ${progress}%;"></div>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+/**
+ * ÜBERARBEITETE HILFSFUNKTION
+ * @param {object} milestone 
+ * @param {array} allProjectTasks 
+ * @returns {string} 
+ */
+function createTaskListHtml(milestone, allProjectTasks) {
+    const milestoneTasks = allProjectTasks.filter(t => t.milestone_id === milestone.id);
+    
+    if (!milestoneTasks || milestoneTasks.length === 0) return `<p style="font-style: italic; color: var(--muted); margin-top: 12px;">Keine Aufgaben definiert.</p>`;
+    let html = '<ul class="task-list">';
+    milestoneTasks.forEach(task => {
+        html += `<li class="task-item ${task.completed ? 'completed' : ''}" data-task-id="${task.id}">
+                    <span class="task-checkbox"><span class="material-icons">${task.completed ? 'check' : ''}</span></span>
+                    <span class="task-text">${task.text}</span>
+                </li>`;
+    });
+    html += '</ul>';
+    return html;
+}
+
+function formatRelativeTime(date) {
+    const seconds = Math.floor((new Date() - date) / 1000);
+    let interval = seconds / 31536000;
+    if (interval > 1) return `vor ${Math.floor(interval)} Jahren`;
+    interval = seconds / 2592000;
+    if (interval > 1) return `vor ${Math.floor(interval)} Monaten`;
+    interval = seconds / 86400;
+    if (interval > 1) return `vor ${Math.floor(interval)} Tagen`;
+    interval = seconds / 3600;
+    if (interval > 1) return `vor ${Math.floor(interval)} Stunden`;
+    interval = seconds / 60;
+    if (interval > 1) return `vor ${Math.floor(interval)} Minuten`;
+    return "gerade eben";
 }
