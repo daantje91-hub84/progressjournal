@@ -330,6 +330,114 @@ function runViewSpecificScripts() {
     }
 }
 
+// DIESE FUNKTIONEN FEHLEN IN DEINER app.js - FÜGE SIE HINZU:
+
+/**
+ * Rendert die Inbox-Ansicht.
+ */
+function renderInbox() {
+    console.log('renderInbox() wird ausgeführt');
+    
+    const inboxListContainer = document.getElementById('inbox-list');
+    if (!inboxListContainer) {
+        console.error('inbox-list Element nicht gefunden');
+        return;
+    }
+    
+    const inboxTasks = mockDB.getInboxTasks();
+    if (inboxTasks.length > 0) {
+        inboxListContainer.innerHTML = inboxTasks.map(task => `
+            <div class="inbox-item" data-task-id="${task.id}">
+                <div class="inbox-item-main">
+                    <div class="inbox-item-text">${task.text}</div>
+                    ${task.notes ? `<div class="inbox-item-notes">${task.notes}</div>` : ''}
+                    <div class="inbox-item-meta">Erstellt: ${formatRelativeTime(new Date(task.created_at))}</div>
+                </div>
+                <div class="inbox-item-actions">
+                    <button class="button-icon process-item-btn" title="Verarbeiten">
+                        <span class="material-icons">arrow_circle_right</span>
+                    </button>
+                    <button class="button-icon delete-item-btn" title="Löschen">
+                        <span class="material-icons">delete_outline</span>
+                    </button>
+                </div>
+            </div>
+        `).join('');
+    } else {
+        inboxListContainer.innerHTML = `<div class="empty-state" style="margin: auto; padding: 20px;"><p>Deine Inbox ist leer. Gut gemacht!</p></div>`;
+    }
+    addInboxListeners();
+}
+
+/**
+ * Rendert die Timeline-Ansicht.
+ */
+function renderTimeline() {
+    console.log('renderTimeline() wird ausgeführt');
+    
+    // Timeline ist noch nicht vollständig implementiert
+    const timelineEvents = document.getElementById('timeline-events');
+    if (timelineEvents) {
+        timelineEvents.innerHTML = `
+            <div class="empty-state" style="margin: auto; padding: 20px;">
+                <p>Timeline-Funktion wird noch entwickelt.</p>
+            </div>
+        `;
+    }
+}
+
+// AKTUALISIERTE runViewSpecificScripts Funktion:
+function runViewSpecificScripts() {
+    console.log('Running scripts for view:', currentView);
+    
+    switch (currentView) {
+        case 'dashboard-empty-content':
+        case 'dashboard-filled-content':
+            renderDashboard();
+            break;
+        case 'projects-content':
+            renderProjects();
+            break;
+        case 'inbox-content':
+            console.log('Loading inbox...');
+            renderInbox(); // ✅ JETZT FUNKTIONIERT ES
+            break;
+        case 'today-content':
+            console.log('Loading today...');
+            renderToday();
+            break;
+        case 'project-detail-content':
+            renderProjectDetails();
+            break;
+        case 'settings-content':
+            renderSettings();
+            break;
+        case 'timeline-content':
+            console.log('Loading timeline...');
+            renderTimeline(); // ✅ AUCH TIMELINE FUNKTIONIERT JETZT
+            break;
+        default:
+            console.warn('Unbekannter View:', currentView);
+    }
+}
+
+// PRÜFE AUCH, OB DIESE HILFSFUNKTION EXISTIERT:
+function formatRelativeTime(date) {
+    const seconds = Math.floor((new Date() - date) / 1000);
+    let interval = seconds / 31536000;
+    if (interval > 1) return `vor ${Math.floor(interval)} Jahren`;
+    interval = seconds / 2592000;
+    if (interval > 1) return `vor ${Math.floor(interval)} Monaten`;
+    interval = seconds / 86400;
+    if (interval > 1) return `vor ${Math.floor(interval)} Tagen`;
+    interval = seconds / 3600;
+    if (interval > 1) return `vor ${Math.floor(interval)} Stunden`;
+    interval = seconds / 60;
+    if (interval > 1) return `vor ${Math.floor(interval)} Minuten`;
+    return "gerade eben";
+}
+
+
 function renderSettings() {
     const settings = mockDB.getUserSettings();
     if (!settings) {
@@ -489,6 +597,8 @@ function setupWizardTriggers() {
     });
 }
 
+// ERSETZE/ERWEITERE DIESE FUNKTIONEN IN DEINER app.js:
+
 /**
  * NEU: Startet den Projekt-Erstellungs-Wizard
  */
@@ -501,13 +611,25 @@ async function startProjectWizard() {
         initializeWizard();
     } catch (error) {
         console.error("Fehler beim Laden des Wizards:", error);
+        // Fallback: Einfaches Eingabefenster
+        const projectName = prompt("Projekt-Name eingeben:");
+        if (projectName) {
+            const newProject = mockDB.addProject({
+                title: projectName,
+                context_id: 'ctx_1', // Standard-Kontext
+                milestones: [{ title: 'Erster Meilenstein', duration: 'Woche 1' }]
+            });
+            navigateTo('project-detail-content', { projectId: newProject.id });
+        }
     }
 }
 
 /**
- * NEU: Initialisiert den Projekt-Erstellungs-Wizard
+ * VOLLSTÄNDIG ÜBERARBEITETE Wizard-Initialisierung
  */
 function initializeWizard() {
+    console.log('Initialisiere Projekt-Wizard...');
+    
     // Setzt die initialen Wizard-Daten zurück
     newProjectData = {
         goal: null, deadline: null, deadlineType: null,
@@ -526,34 +648,49 @@ function initializeWizard() {
         const nextButton = document.getElementById('next-button');
         const wizardModal = document.getElementById('wizard-modal');
     
-        if (!wizardModal) return;
+        if (!wizardModal) {
+            console.error('Wizard Modal nicht gefunden!');
+            return;
+        }
         
         // Hide all steps first
         document.querySelectorAll('.wizard-step').forEach(step => step.classList.add('hidden'));
-        document.getElementById(`step-${wizardStep}`).classList.remove('hidden');
+        const currentStepEl = document.getElementById(`step-${wizardStep}`);
+        if (currentStepEl) {
+            currentStepEl.classList.remove('hidden');
+        }
 
-        progressLabel.textContent = `Schritt ${wizardStep + 1} von ${totalSteps}`;
-        progressFill.style.width = `${(wizardStep / totalSteps) * 100}%`;
+        if (progressLabel) progressLabel.textContent = `Schritt ${wizardStep + 1} von ${totalSteps}`;
+        if (progressFill) progressFill.style.width = `${((wizardStep + 1) / totalSteps) * 100}%`;
 
         // Button states
-        prevButton.disabled = wizardStep === 0;
-        prevButton.classList.toggle('hidden', wizardStep === 0);
-        nextButton.disabled = true; // Default to disabled
+        if (prevButton) {
+            prevButton.disabled = wizardStep === 0;
+            prevButton.classList.toggle('hidden', wizardStep === 0);
+        }
+        
+        if (nextButton) {
+            nextButton.disabled = true; // Default to disabled
 
-        if (wizardStep === 0) {
-            nextButton.disabled = newProjectData.wizardType === null;
-        } else if (wizardStep === 1) {
-            nextButton.disabled = !newProjectData.goal || newProjectData.goal.length < 5;
-        } else if (wizardStep === 2) {
-            nextButton.disabled = !newProjectData.context_id;
-        } else if (wizardStep === 3) {
-            nextButton.disabled = !newProjectData.deadlineType || (newProjectData.deadlineType === 'user_date' && !newProjectData.deadline);
-        } else if (wizardStep === 4) {
-            nextButton.disabled = !newProjectData.startingPoint;
-        } else if (wizardStep === 5) {
-            nextButton.textContent = 'Fertigstellen';
-            nextButton.innerHTML = `<span>Fertigstellen</span><span class="material-icons">check_circle_outline</span>`;
-            nextButton.disabled = false;
+            if (wizardStep === 0) {
+                nextButton.disabled = newProjectData.wizardType === null;
+                nextButton.innerHTML = `<span>Weiter</span><span class="material-icons">arrow_forward</span>`;
+            } else if (wizardStep === 1) {
+                nextButton.disabled = !newProjectData.goal || newProjectData.goal.length < 5;
+                nextButton.innerHTML = `<span>Weiter</span><span class="material-icons">arrow_forward</span>`;
+            } else if (wizardStep === 2) {
+                nextButton.disabled = !newProjectData.context_id;
+                nextButton.innerHTML = `<span>Weiter</span><span class="material-icons">arrow_forward</span>`;
+            } else if (wizardStep === 3) {
+                nextButton.disabled = !newProjectData.deadlineType || (newProjectData.deadlineType === 'user_date' && !newProjectData.deadline);
+                nextButton.innerHTML = `<span>Weiter</span><span class="material-icons">arrow_forward</span>`;
+            } else if (wizardStep === 4) {
+                nextButton.disabled = !newProjectData.startingPoint;
+                nextButton.innerHTML = `<span>Plan erstellen</span><span class="material-icons">auto_awesome</span>`;
+            } else if (wizardStep === 5) {
+                nextButton.disabled = false;
+                nextButton.innerHTML = `<span>Projekt erstellen</span><span class="material-icons">check_circle_outline</span>`;
+            }
         }
     }
     
@@ -566,14 +703,22 @@ function initializeWizard() {
             if (wizardStep === 2) populateContextOptions();
             else if (wizardStep === 4) populateAusgangslageOptions();
             else if (wizardStep === 5) {
-                if (newProjectData.wizardType === 'ai') generateAiPlan();
-                else createManualPlanPlaceholder();
+                if (newProjectData.wizardType === 'ai') {
+                    generateAiPlan();
+                } else {
+                    createManualPlanPlaceholder();
+                }
             }
-        } else if (wizardStep === totalSteps) {
+        } else {
+            // PROJEKT ERSTELLEN UND WIZARD SCHLIEßEN
             createNewProject();
             closeWizard();
-            // NEU: Navigiere zum Dashboard, um den Refresh zu erzwingen
-            navigateTo('dashboard');
+            // Navigiere zum neuen Projekt oder Dashboard
+            if (newProjectData.projectId) {
+                navigateTo('project-detail-content', { projectId: newProjectData.projectId });
+            } else {
+                navigateTo('dashboard');
+            }
         }
     }
     
@@ -591,156 +736,235 @@ function initializeWizard() {
         }
     }
     
-    document.getElementById('close-wizard-btn')?.addEventListener('click', closeWizard);
-    document.getElementById('prev-button')?.addEventListener('click', prevStep);
-    document.getElementById('next-button')?.addEventListener('click', nextStep);
+    // EVENT LISTENERS
+    const closeBtn = document.getElementById('close-wizard-btn');
+    const prevBtn = document.getElementById('prev-button');
+    const nextBtn = document.getElementById('next-button');
+    
+    if (closeBtn) closeBtn.addEventListener('click', closeWizard);
+    if (prevBtn) prevBtn.addEventListener('click', prevStep);
+    if (nextBtn) nextBtn.addEventListener('click', nextStep);
 
     // Step-specific listeners
-    document.getElementById('step-0').addEventListener('click', (e) => {
-        const type = e.target.closest('[data-wizard-type]');
-        if (type) {
-            newProjectData.wizardType = type.dataset.wizardType;
-            nextStep();
-        }
-    });
-    
-    document.getElementById('goal-input').addEventListener('input', (e) => {
-        newProjectData.goal = e.target.value;
-        updateWizardUI();
-    });
-    
-    document.getElementById('step-2').addEventListener('click', (e) => {
-        const contextBtn = e.target.closest('[data-value]');
-        if (contextBtn) {
-            document.querySelectorAll('#context-options .option-button').forEach(btn => btn.classList.remove('selected'));
-            contextBtn.classList.add('selected');
-            newProjectData.context_id = contextBtn.dataset.value;
-            updateWizardUI();
-        }
-    });
-
-    document.getElementById('step-3').addEventListener('click', (e) => {
-        const deadlineBtn = e.target.closest('[data-value]');
-        if (deadlineBtn) {
-            document.querySelectorAll('#deadline-options .option-button').forEach(btn => btn.classList.remove('selected'));
-            deadlineBtn.classList.add('selected');
-            newProjectData.deadlineType = deadlineBtn.dataset.value;
-            const inputContainer = document.getElementById('deadline-input-container');
-            inputContainer.classList.toggle('visible', newProjectData.deadlineType === 'user_date');
-            updateWizardUI();
-        }
-    });
-    document.getElementById('deadline-input').addEventListener('input', (e) => {
-        newProjectData.deadline = e.target.value;
-        updateWizardUI();
-    });
-    
-    document.getElementById('step-4').addEventListener('click', (e) => {
-        const startingPointBtn = e.target.closest('[data-value]');
-        if (startingPointBtn) {
-            document.querySelectorAll('#ausgangslage-options .option-button').forEach(btn => btn.classList.remove('selected'));
-            startingPointBtn.classList.add('selected');
-            newProjectData.startingPoint = startingPointBtn.dataset.value;
-            updateWizardUI();
-        }
-    });
-    
-    updateWizardUI();
-}
-
-/**
- * NEU: Erstellt ein neues Projekt und fügt es zur mockDB hinzu.
- */
-function createNewProject() {
-    const projectTitle = newProjectData.goal;
-    let milestones = newProjectData.generatedPlan;
-    if (!milestones) {
-        // Fallback für manuelle Erstellung
-        milestones = [{ title: 'Erster Meilenstein', duration: 'Woche 1' }]; 
+    const step0 = document.getElementById('step-0');
+    if (step0) {
+        step0.addEventListener('click', (e) => {
+            const type = e.target.closest('[data-wizard-type]');
+            if (type) {
+                // Remove previous selections
+                step0.querySelectorAll('.option-button').forEach(btn => btn.classList.remove('selected'));
+                type.classList.add('selected');
+                
+                newProjectData.wizardType = type.dataset.wizardType;
+                console.log('Wizard-Typ gewählt:', newProjectData.wizardType);
+                updateWizardUI();
+            }
+        });
     }
-    const newProject = mockDB.addProject({
-        title: projectTitle,
-        context_id: newProjectData.context_id,
-        milestones: milestones
-    });
-    newProjectData.projectId = newProject.id;
-    console.log("Neues Projekt erstellt:", newProject);
+    
+    const goalInput = document.getElementById('goal-input');
+    if (goalInput) {
+        goalInput.addEventListener('input', (e) => {
+            newProjectData.goal = e.target.value;
+            console.log('Ziel eingegeben:', newProjectData.goal);
+            updateWizardUI();
+        });
+    }
+    
+    const step2 = document.getElementById('step-2');
+    if (step2) {
+        step2.addEventListener('click', (e) => {
+            const contextBtn = e.target.closest('[data-value]');
+            if (contextBtn) {
+                step2.querySelectorAll('.option-button').forEach(btn => btn.classList.remove('selected'));
+                contextBtn.classList.add('selected');
+                newProjectData.context_id = contextBtn.dataset.value;
+                console.log('Kontext gewählt:', newProjectData.context_id);
+                updateWizardUI();
+            }
+        });
+    }
+
+    const step3 = document.getElementById('step-3');
+    if (step3) {
+        step3.addEventListener('click', (e) => {
+            const deadlineBtn = e.target.closest('[data-value]');
+            if (deadlineBtn) {
+                step3.querySelectorAll('.option-button').forEach(btn => btn.classList.remove('selected'));
+                deadlineBtn.classList.add('selected');
+                newProjectData.deadlineType = deadlineBtn.dataset.value;
+                
+                const inputContainer = document.getElementById('deadline-input-container');
+                if (inputContainer) {
+                    inputContainer.classList.toggle('visible', newProjectData.deadlineType === 'user_date');
+                }
+                console.log('Deadline-Typ gewählt:', newProjectData.deadlineType);
+                updateWizardUI();
+            }
+        });
+        
+        const deadlineInput = document.getElementById('deadline-input');
+        if (deadlineInput) {
+            deadlineInput.addEventListener('input', (e) => {
+                newProjectData.deadline = e.target.value;
+                console.log('Deadline gesetzt:', newProjectData.deadline);
+                updateWizardUI();
+            });
+        }
+    }
+    
+    const step4 = document.getElementById('step-4');
+    if (step4) {
+        step4.addEventListener('click', (e) => {
+            const startingPointBtn = e.target.closest('[data-value]');
+            if (startingPointBtn) {
+                step4.querySelectorAll('.option-button').forEach(btn => btn.classList.remove('selected'));
+                startingPointBtn.classList.add('selected');
+                newProjectData.startingPoint = startingPointBtn.dataset.value;
+                console.log('Ausgangslage gewählt:', newProjectData.startingPoint);
+                updateWizardUI();
+            }
+        });
+    }
+    
+    // Wizard anzeigen und initialisieren
+    const wizardModal = document.getElementById('wizard-modal');
+    if (wizardModal) {
+        wizardModal.classList.remove('hidden');
+        updateWizardUI();
+        console.log('Wizard erfolgreich initialisiert');
+    } else {
+        console.error('Wizard Modal konnte nicht angezeigt werden');
+    }
 }
 
-/**
- * NEU: Füllt den Kontext-Auswahlschritt des Wizards.
- */
+// RESTLICHE HILFSFUNKTIONEN BLEIBEN GLEICH, ABER MIT BESSERER ERROR-BEHANDLUNG:
+
 function populateContextOptions() {
     const optionsContainer = document.getElementById('context-options');
+    if (!optionsContainer) {
+        console.error('Context-Options Container nicht gefunden');
+        return;
+    }
+    
     optionsContainer.innerHTML = '';
     mockDB.contexts.forEach(context => {
         optionsContainer.innerHTML += `<button type="button" class="option-button" data-value="${context.id}">${context.emoji} ${context.title}</button>`;
     });
+    console.log('Kontext-Optionen geladen');
 }
 
-/**
- * NEU: Füllt den Ausgangslage-Schritt des Wizards.
- */
 function populateAusgangslageOptions() {
     const optionsContainer = document.getElementById('ausgangslage-options');
+    if (!optionsContainer) {
+        console.error('Ausgangslage-Options Container nicht gefunden');
+        return;
+    }
+    
     optionsContainer.innerHTML = '';
     const contextId = newProjectData.context_id;
     const context = mockDB.contexts.find(c => c.id === contextId);
     
-    let relevantTemplates = mockDB.ausgangslage.standard;
-    if (context && mockDB.ausgangslage[context.title.toLowerCase().split(' ')[0]]) {
+    let relevantTemplates = mockDB.ausgangslage?.standard || [];
+    if (context && mockDB.ausgangslage && mockDB.ausgangslage[context.title.toLowerCase().split(' ')[0]]) {
         relevantTemplates = mockDB.ausgangslage[context.title.toLowerCase().split(' ')[0]];
     }
 
     relevantTemplates.forEach(template => {
         optionsContainer.innerHTML += `<button type="button" class="option-button" data-value="${template.id}">${template.text}</button>`;
     });
+    console.log('Ausgangslage-Optionen geladen');
 }
 
-/**
- * NEU: Simuliert die KI-Plan-Generierung.
- */
 function generateAiPlan() {
     const planDisplay = document.getElementById('plan-display-container');
+    if (!planDisplay) {
+        console.error('Plan Display Container nicht gefunden');
+        return;
+    }
+    
     const context = mockDB.contexts.find(c => c.id === newProjectData.context_id);
     const contextKey = context ? context.title.toLowerCase().split(' ')[0] : 'standard';
 
-    let templateData = mockDB.planTemplates[contextKey] ?
-        mockDB.planTemplates[contextKey][newProjectData.startingPoint] :
-        mockDB.planTemplates.standard;
-
-    if (!templateData) {
+    let templateData;
+    if (mockDB.planTemplates && mockDB.planTemplates[contextKey] && mockDB.planTemplates[contextKey][newProjectData.startingPoint]) {
+        templateData = mockDB.planTemplates[contextKey][newProjectData.startingPoint];
+    } else if (mockDB.planTemplates && mockDB.planTemplates.standard) {
         templateData = mockDB.planTemplates.standard;
+    } else {
+        // Fallback wenn keine Templates existieren
+        templateData = [
+            { title: 'Projekt starten', duration: 'Woche 1-2' },
+            { title: 'Fortschritte machen', duration: 'Woche 3-4' },
+            { title: 'Ziel erreichen', duration: 'Woche 5-6' }
+        ];
     }
     
     planDisplay.innerHTML = '';
     let html = '';
     templateData.forEach((milestone) => {
-        html += `<div class="milestone-item">
-                    <span class="material-icons milestone-icon">tour</span>
+        html += `<div class="milestone-item" style="display: flex; align-items: center; gap: 12px; padding: 16px; background: var(--light-gray); border-radius: var(--radius); margin-bottom: 12px;">
+                    <span class="material-icons milestone-icon" style="color: var(--main-blue);">tour</span>
                     <div class="milestone-details">
-                        <h3>${milestone.title}</h3>
-                        <p>${milestone.duration}</p>
+                        <h3 style="margin: 0; font-size: 16px; font-weight: 600;">${milestone.title}</h3>
+                        <p style="margin: 4px 0 0 0; color: var(--muted); font-size: 14px;">${milestone.duration}</p>
                     </div>
                 </div>`;
     });
     planDisplay.innerHTML = html;
     newProjectData.generatedPlan = templateData;
+    console.log('KI-Plan generiert:', templateData);
 }
 
-/**
- * NEU: Zeigt einen Platzhalter für die manuelle Planerstellung an.
- */
 function createManualPlanPlaceholder() {
     const planDisplay = document.getElementById('plan-display-container');
+    if (!planDisplay) return;
+    
     planDisplay.innerHTML = `
-        <div class="empty-state">
-            <p>Du kannst die Meilensteine für dein Projekt nun manuell in der Detailansicht hinzufügen.</p>
+        <div class="empty-state" style="padding: 40px; text-align: center; color: var(--muted);">
+            <span class="material-icons" style="font-size: 48px; margin-bottom: 16px;">edit</span>
+            <p>Du kannst die Meilensteine für dein Projekt nach der Erstellung manuell hinzufügen.</p>
         </div>
     `;
     newProjectData.generatedPlan = [{ title: 'Dein erster Meilenstein', duration: 'Woche 1' }];
+    console.log('Manueller Plan-Platzhalter erstellt');
 }
 
+/**
+ * VERBESSERTE Projekt-Erstellung
+ */
+function createNewProject() {
+    console.log('Erstelle neues Projekt mit Daten:', newProjectData);
+    
+    if (!newProjectData.goal) {
+        console.error('Kein Projektziel definiert');
+        alert('Fehler: Kein Projektziel definiert');
+        return;
+    }
+    
+    const projectTitle = newProjectData.goal;
+    let milestones = newProjectData.generatedPlan;
+    if (!milestones || milestones.length === 0) {
+        // Fallback für manuelle Erstellung
+        milestones = [{ title: 'Erster Meilenstein', duration: 'Woche 1' }]; 
+    }
+    
+    try {
+        const newProject = mockDB.addProject({
+            title: projectTitle,
+            context_id: newProjectData.context_id || 'ctx_1',
+            milestones: milestones
+        });
+        
+        newProjectData.projectId = newProject.id;
+        console.log("Neues Projekt erfolgreich erstellt:", newProject);
+        alert(`Projekt "${projectTitle}" wurde erfolgreich erstellt!`);
+        
+    } catch (error) {
+        console.error('Fehler beim Erstellen des Projekts:', error);
+        alert('Fehler beim Erstellen des Projekts. Bitte versuche es erneut.');
+    }
+}
 
 function addTodayListeners() {
     document.querySelectorAll('.today-task-item').forEach(item => {

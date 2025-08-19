@@ -89,6 +89,103 @@ const mockDB = {
         }
     ],
 
+    // ERWEITERE DEINE mockDB.js UM DIESE FEHLENDEN DATEN:
+
+// Füge diese Daten in deine mockDB.js ein:
+
+// Ausgangslage-Templates für den Wizard
+ausgangslage: {
+    standard: [
+        { id: 'beginner', text: 'Ich bin kompletter Anfänger' },
+        { id: 'some_experience', text: 'Ich habe schon etwas Erfahrung' },
+        { id: 'advanced', text: 'Ich bin schon weit fortgeschritten' }
+    ],
+    sport: [
+        { id: 'no_training', text: 'Ich mache aktuell keinen Sport' },
+        { id: 'light_training', text: 'Ich trainiere 1-2x pro Woche' },
+        { id: 'regular_training', text: 'Ich trainiere regelmäßig 3-4x pro Woche' },
+        { id: 'intensive_training', text: 'Ich bin bereits sehr aktiv' }
+    ],
+    künstlerische: [
+        { id: 'no_art', text: 'Ich habe noch nie künstlerisch gearbeitet' },
+        { id: 'hobby_art', text: 'Ich male/zeichne als Hobby' },
+        { id: 'some_art', text: 'Ich habe schon einige Werke erstellt' }
+    ],
+    organisation: [
+        { id: 'chaotic', text: 'Mein Leben ist ziemlich chaotisch' },
+        { id: 'some_structure', text: 'Ich habe schon etwas Struktur' },
+        { id: 'well_organized', text: 'Ich bin bereits gut organisiert' }
+    ]
+},
+
+// Plan-Templates für die KI-Generierung
+planTemplates: {
+    standard: [
+        { title: 'Grundlagen schaffen', duration: 'Woche 1-2' },
+        { title: 'Erste Schritte umsetzen', duration: 'Woche 3-4' },
+        { title: 'Fortschritte vertiefen', duration: 'Woche 5-6' },
+        { title: 'Ziel erreichen', duration: 'Woche 7-8' }
+    ],
+    sport: {
+        no_training: [
+            { title: 'Medizinischen Check machen', duration: 'Woche 1' },
+            { title: 'Grundausstattung besorgen', duration: 'Woche 1-2' },
+            { title: 'Mit leichtem Training beginnen', duration: 'Woche 2-4' },
+            { title: 'Trainingsintensität steigern', duration: 'Woche 5-8' },
+            { title: 'Erstes Ziel erreichen', duration: 'Woche 9-12' }
+        ],
+        light_training: [
+            { title: 'Trainingszustand bewerten', duration: 'Woche 1' },
+            { title: 'Trainingsplan erstellen', duration: 'Woche 1-2' },
+            { title: 'Intensität systematisch steigern', duration: 'Woche 3-6' },
+            { title: 'Ziel erreichen', duration: 'Woche 7-10' }
+        ]
+    },
+    künstlerische: {
+        no_art: [
+            { title: 'Inspiration sammeln', duration: 'Woche 1' },
+            { title: 'Grundmaterialien besorgen', duration: 'Woche 1-2' },
+            { title: 'Grundtechniken erlernen', duration: 'Woche 2-4' },
+            { title: 'Erste eigene Werke schaffen', duration: 'Woche 5-8' }
+        ]
+    }
+},
+
+// ERWEITERE AUCH DIE PROJEKT-ERSTELLUNGS-FUNKTION:
+addProject: function(projectData) {
+    const newProject = {
+        id: `proj_${Date.now()}`,
+        user_id: 'user_123',
+        context_id: projectData.context_id,
+        title: projectData.title,
+        status: 'active',
+        created_at: new Date().toISOString(),
+        milestones: projectData.milestones.map((milestone, index) => ({
+            id: `ms_${Date.now()}_${index}`,
+            title: milestone.title,
+            order: index + 1,
+            duration: milestone.duration
+        }))
+    };
+    
+    this.projects.push(newProject);
+    
+    // Automatisch erste Aufgaben für jeden Meilenstein erstellen
+    if (projectData.milestones && projectData.milestones.length > 0) {
+        projectData.milestones.forEach((milestone, index) => {
+            this.addTask({
+                text: `${milestone.title} - Erste Aufgabe`,
+                project_id: newProject.id,
+                milestone_id: `ms_${Date.now()}_${index}`,
+                notes: `Automatisch erstellt für: ${milestone.title}`
+            });
+        });
+    }
+    
+    console.log('Neues Projekt erstellt:', newProject);
+    return newProject;
+},
+
     // --- DATENZUGRIFFS-FUNKTIONEN ---
     // NEUE Funktionen
     getActiveStreaksCount: function(userId = 'user_123') {
