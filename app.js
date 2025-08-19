@@ -195,74 +195,59 @@ function renderProjects() {
 /**
  * Rendert die Inbox-Ansicht.
  */
-function renderInbox() {
-    const inboxListContainer = document.getElementById('inbox-list');
-    if (!inboxListContainer) return;
-    const inboxTasks = mockDB.getInboxTasks();
-    if (inboxTasks.length > 0) {
-        inboxListContainer.innerHTML = inboxTasks.map(task => `
-            <div class="inbox-item" data-task-id="${task.id}">
-                <div class="inbox-item-main">
-                    <div class="inbox-item-text">${task.text}</div>
-                    ${task.notes ? `<div class="inbox-item-notes">${task.notes}</div>` : ''}
-                    <div class="inbox-item-meta">Erstellt: ${formatRelativeTime(new Date(task.created_at))}</div>
-                </div>
-                <div class="inbox-item-actions">
-                    <button class="button-icon process-item-btn" title="Verarbeiten">
-                        <span class="material-icons">arrow_circle_right</span>
-                    </button>
-                    <button class="button-icon delete-item-btn" title="Löschen">
-                        <span class="material-icons">delete_outline</span>
-                    </button>
-                </div>
-            </div>
-        `).join('');
-    } else {
-        inboxListContainer.innerHTML = `<div class="empty-state" style="margin: auto; padding: 20px;"><p>Deine Inbox ist leer. Gut gemacht!</p></div>`;
-    }
-    addInboxListeners();
-}
+// Ersetze den entsprechenden Teil in deiner renderToday() Funktion in app.js:
 
-/**
- * ÜBERARBEITETE FUNKTION
- * Füllt das gesamte Tages-Cockpit mit allen neuen Statistiken.
- */
+// PROBLEM: Die renderToday() Funktion wird möglicherweise auch in anderen Views aufgerufen
+// LÖSUNG: Bessere Element-Checks und Schutz vor Fehlern
+
 function renderToday() {
     const todayList = document.getElementById('today-list');
     const todayTopContainer = document.querySelector('.today-top-container');
 
-    // WICHTIGER CHECK: Prüfe, ob die Elemente existieren, bevor du sie verwendest
-    if (!todayList || !todayTopContainer) return;
+    // WICHTIGER CHECK: Nur ausführen wenn wir wirklich in der Today-View sind
+    if (!todayList || !todayTopContainer) {
+        console.log('Today-View Elemente nicht gefunden - skip renderToday()');
+        return;
+    }
 
     const todayDateEl = document.getElementById('current-date');
     if (todayDateEl) {
-      todayDateEl.textContent = new Date().toLocaleDateString('de-DE', { weekday: 'long', month: 'long', day: 'numeric' });
+        todayDateEl.textContent = new Date().toLocaleDateString('de-DE', { weekday: 'long', month: 'long', day: 'numeric' });
     }
 
     const todayTasks = mockDB.getTodayTasks();
     const settings = mockDB.getUserSettings();
 
-    // Tages-Cockpit aktualisieren
+    // Tages-Cockpit aktualisieren - MIT ZUSÄTZLICHEN CHECKS
     const completedTasksCount = todayTasks.filter(t => t.completed).length;
     const completedPomodorosCount = todayTasks.reduce((sum, task) => sum + (task.pomodoro_completed || 0), 0);
     const activeStreaksCount = mockDB.getActiveStreaksCount();
     const customTrackers = mockDB.getCustomTrackers();
 
-    const tasksStatEl = document.getElementById('tasks-completed-stat');
-    if (tasksStatEl && settings) {
-      tasksStatEl.textContent = `${completedTasksCount}/${settings.daily_task_goal}`;
-    }
-    const pomodorosStatEl = document.getElementById('pomodoros-completed-stat');
-    if (pomodorosStatEl && settings) {
-      pomodorosStatEl.textContent = `${completedPomodorosCount}/${settings.daily_pomodoro_goal}`;
-    }
-    const streaksStatEl = document.getElementById('active-streaks-stat');
-    if (streaksStatEl) {
-      streaksStatEl.innerHTML = `🔥 ${activeStreaksCount}`;
+    // SICHERE Aktualisierung für Aufgaben
+    const tasksCurrentEl = document.getElementById('tasks-completed-stat');
+    const tasksTargetEl = document.getElementById('tasks-target-stat');
+    if (tasksCurrentEl && tasksTargetEl && settings) {
+        tasksCurrentEl.textContent = completedTasksCount;
+        tasksTargetEl.textContent = settings.daily_task_goal;
     }
 
+    // SICHERE Aktualisierung für Pomodoros
+    const pomodorosCurrentEl = document.getElementById('pomodoros-completed-stat');
+    const pomodorosTargetEl = document.getElementById('pomodoros-target-stat');
+    if (pomodorosCurrentEl && pomodorosTargetEl && settings) {
+        pomodorosCurrentEl.textContent = completedPomodorosCount;
+        pomodorosTargetEl.textContent = settings.daily_pomodoro_goal;
+    }
+
+    const streaksStatEl = document.getElementById('active-streaks-stat');
+    if (streaksStatEl) {
+        streaksStatEl.innerHTML = `🔥 ${activeStreaksCount}`;
+    }
+
+    // SICHERE Tracker-Aktualisierung
     const trackersContainer = document.getElementById('cockpit-trackers-container');
-    if (trackersContainer) {
+    if (trackersContainer && customTrackers) {
         trackersContainer.innerHTML = customTrackers.map(tracker => `
             <div class="tracker-stat">
                 <div class="stat-value">${tracker.value}</div>
@@ -271,7 +256,7 @@ function renderToday() {
         `).join('');
     }
     
-    // Aufgabenliste rendern
+    // Rest der Funktion...
     if (todayTasks.length > 0) {
         todayList.innerHTML = todayTasks.map(task => {
             const project = task.project_id ? mockDB.getProjectById(task.project_id) : null;
@@ -312,6 +297,37 @@ function renderToday() {
     const resetBtn = document.getElementById('reset-btn');
     if(startPauseBtn) startPauseBtn.onclick = startPauseTimer;
     if(resetBtn) resetBtn.onclick = resetTimer;
+}
+
+// ZUSÄTZLICHER FIX: Prüfe auch die runViewSpecificScripts Funktion
+function runViewSpecificScripts() {
+    console.log('Running scripts for view:', currentView); // DEBUG
+    
+    switch (currentView) {
+        case 'dashboard-empty-content':
+        case 'dashboard-filled-content':
+            renderDashboard();
+            break;
+        case 'projects-content':
+            renderProjects();
+            break;
+        case 'inbox-content':
+            console.log('Loading inbox...'); // DEBUG
+            renderInbox();
+            break;
+        case 'today-content':
+            console.log('Loading today...'); // DEBUG
+            renderToday();
+            break;
+        case 'project-detail-content':
+            renderProjectDetails();
+            break;
+        case 'settings-content':
+            renderSettings();
+            break;
+        default:
+            console.warn('Unbekannter View:', currentView);
+    }
 }
 
 function renderSettings() {

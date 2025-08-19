@@ -5,26 +5,31 @@
     </div>
 </div>
 
-<!-- NEUER HAUPT-CONTAINER FÜR DAS TAGES-COCKPIT -->
+<!-- VERBESSERTER HAUPT-CONTAINER FÜR DAS TAGES-COCKPIT -->
 <div class="today-top-container">
     <div class="daily-cockpit">
         <h3>Tagesziele</h3>
         <div class="cockpit-goals">
             <div class="goal-stat">
-                <div class="stat-value" id="tasks-completed-stat">0/0</div>
+                <div class="stat-value">
+                    <span class="stat-current" id="tasks-completed-stat">0</span><span class="stat-divider">/</span><span class="stat-target" id="tasks-target-stat">0</span>
+                </div>
                 <div class="stat-label">Aufgaben</div>
             </div>
             <div class="goal-stat">
-                <div class="stat-value" id="pomodoros-completed-stat">0/0</div>
+                <div class="stat-value">
+                    <span class="stat-current" id="pomodoros-completed-stat">0</span><span class="stat-divider">/</span><span class="stat-target" id="pomodoros-target-stat">0</span>
+                </div>
                 <div class="stat-label">Pomodoros</div>
             </div>
             <div class="goal-stat">
                 <div class="stat-value" id="active-streaks-stat">🔥 0</div>
                 <div class="stat-label">Aktive Streaks</div>
             </div>
-        </div>
-        <div id="cockpit-trackers-container" class="cockpit-trackers">
-            <!-- Individuelle Tracker werden hier per JS eingefügt -->
+            <!-- TRACKER JETZT DIREKT IN DER GOALS-REIHE -->
+            <div id="cockpit-trackers-container" class="cockpit-trackers">
+                <!-- Individuelle Tracker werden hier per JS eingefügt -->
+            </div>
         </div>
     </div>
     

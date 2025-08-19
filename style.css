@@ -1202,3 +1202,119 @@ input[type="date"].setting-input {
     color: var(--main-red);
     font-size: 20px;
 }
+
+/* Füge diese CSS-Regeln zu deiner style.css hinzu: */
+
+/* === VERBESSERTE TAGESZIELE STYLES === */
+
+.stat-value {
+    font-size: 28px;
+    font-weight: 700;
+    font-family: 'Montserrat', sans-serif;
+    line-height: 1.2;
+    display: flex;
+    align-items: baseline;
+    justify-content: center;
+}
+
+.stat-current {
+    color: var(--text);
+}
+
+.stat-divider {
+    color: var(--muted);
+    margin: 0 2px;
+    font-size: 20px; /* Etwas kleiner als die Hauptzahl */
+}
+
+.stat-target {
+    color: var(--muted);
+    font-size: 18px; /* Etwa die Hälfte der Hauptzahl */
+    font-weight: 600; /* Etwas weniger dick */
+}
+
+/* Tracker-Container für individuelle Metriken */
+.cockpit-trackers {
+    display: flex;
+    gap: 24px;
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border-color);
+}
+
+.tracker-stat {
+    text-align: center;
+}
+
+.tracker-stat .stat-value {
+    font-size: 20px;
+    color: var(--main-blue);
+}
+
+.tracker-stat .stat-label {
+    font-size: 12px;
+    color: var(--muted);
+    font-weight: 600;
+}
+
+/* Füge diese CSS-Regeln zu deiner style.css hinzu: */
+
+/* === VERBESSERTE TAGESZIELE STYLES === */
+
+.cockpit-goals {
+    display: flex;
+    gap: 32px;
+    margin: auto 0;
+    /* Alle Goals UND Tracker in einer Reihe */
+    align-items: center;
+}
+
+.stat-value {
+    font-size: 28px;
+    font-weight: 700;
+    font-family: 'Montserrat', sans-serif;
+    line-height: 1.2;
+    display: flex;
+    align-items: baseline;
+    justify-content: center;
+}
+
+.stat-current {
+    color: var(--text);
+}
+
+.stat-divider {
+    color: var(--muted);
+    margin: 0 2px;
+    font-size: 20px; /* Etwas kleiner als die Hauptzahl */
+}
+
+.stat-target {
+    color: var(--muted);
+    font-size: 18px; /* Etwa die Hälfte der Hauptzahl */
+    font-weight: 600; /* Etwas weniger dick */
+}
+
+/* Tracker-Container für individuelle Metriken - JETZT INLINE */
+.cockpit-trackers {
+    display: flex;
+    gap: 32px;
+    /* ENTFERNT: margin-top, padding-top, border-top */
+    /* Tracker werden jetzt direkt in die Goal-Reihe integriert */
+}
+
+.tracker-stat {
+    text-align: center;
+}
+
+.tracker-stat .stat-value {
+    font-size: 20px;
+    color: var(--main-blue);
+    /* Kleinere Tracker-Werte für bessere Balance */
+}
+
+.tracker-stat .stat-label {
+    font-size: 12px;
+    color: var(--muted);
+    font-weight: 600;
+}
