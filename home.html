@@ -21,9 +21,13 @@
       </a>
     </div>
     <div class="app-header__actions">
+      
       <span class="material-icons" id="search-btn">search</span>
       <span class="material-icons" id="notifications-btn">notifications</span>
       <span class="material-icons" id="account-btn">account_circle</span>
+      <button class="quick-add-btn" id="quick-add-btn" title="Schnellerfassung">
+        <span class="material-icons">add</span>
+      </button>
     </div>
   </header>
   <nav class="app-nav">
@@ -36,6 +40,22 @@
   </nav>
 
   <main class="main-content" id="app-content"></main>
+
+  <div id="quick-add-modal" class="modal-overlay hidden">
+      <div class="quick-add-container">
+          <button class="close-button" id="close-quick-add-btn"><span class="material-icons">close</span></button>
+          <h2>Schnellerfassung</h2>
+          <p>Was liegt dir auf dem Herzen?</p>
+          <div class="input-group">
+              <input type="text" id="quick-add-input" placeholder="Neue Idee oder Aufgabe...">
+          </div>
+          <!-- ======================================================= -->
+          <!-- AKTUALISIERTER BUTTON -->
+          <!-- ======================================================= -->
+          <button id="save-quick-add-btn" class="button-cta">Speichern</button>
+          <!-- ======================================================= -->
+      </div>
+  </div>
 
   <script src="mockDB.js"></script>
   <script src="app.js"></script>

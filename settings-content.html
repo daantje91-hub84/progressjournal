@@ -15,6 +15,21 @@
             <button class="button-icon">Bearbeiten</button>
         </div>
     </section>
+
+    <!-- NEUER ABSCHNITT: TAGESZIELE -->
+    <section class="settings-section">
+        <h2>Tagesziele</h2>
+        <div class="setting-item">
+            <label for="daily-tasks-goal">Aufgaben pro Tag</label>
+            <input type="number" class="setting-input" id="daily-tasks-goal" value="5" min="1">
+        </div>
+        <div class="setting-item">
+            <label for="daily-pomodoros-goal">Pomodoros pro Tag</label>
+            <input type="number" class="setting-input" id="daily-pomodoros-goal" value="8" min="1">
+        </div>
+    </section>
+
+    <!-- WIEDERHERGESTELLTER ABSCHNITT: POMODORO TIMER -->
     <section class="settings-section">
         <h2>Pomodoro Timer</h2>
         <div class="setting-item">
@@ -30,6 +45,30 @@
             <input type="number" class="setting-input" id="long-break" value="15">
         </div>
     </section>
+
+    <!-- NEUER ABSCHNITT: ABWESENHEIT -->
+    <section class="settings-section">
+        <h2>Streaks & Abwesenheit</h2>
+        <div class="setting-item">
+            <span>Urlaubsmodus</span>
+            <div class="toggle-switch">
+                <input type="checkbox" id="vacation-mode-toggle" class="toggle-input">
+                <label for="vacation-mode-toggle" class="toggle-label"></label>
+            </div>
+        </div>
+        <!-- Dieser Container wird per JS ein- und ausgeblendet -->
+        <div id="vacation-dates-container" class="hidden" style="margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border-color);">
+             <div class="setting-item">
+                <label for="vacation-start">Beginn</label>
+                <input type="date" class="setting-input" id="vacation-start">
+            </div>
+             <div class="setting-item">
+                <label for="vacation-end">Ende</label>
+                <input type="date" class="setting-input" id="vacation-end">
+            </div>
+        </div>
+    </section>
+
     <section class="settings-section">
         <h2>Erscheinungsbild</h2>
         <div class="setting-item">
@@ -42,23 +81,7 @@
             </div>
         </div>
     </section>
-    <section class="settings-section">
-        <h2>Benachrichtigungen</h2>
-        <div class="setting-item">
-            <span>Tägliche Erinnerungen</span>
-            <div class="toggle-switch">
-                <input type="checkbox" id="toggle-daily" class="toggle-input" checked>
-                <label for="toggle-daily" class="toggle-label"></label>
-            </div>
-        </div>
-        <div class="setting-item">
-            <span>Meilenstein erreicht</span>
-            <div class="toggle-switch">
-                <input type="checkbox" id="toggle-milestone" class="toggle-input" checked>
-                <label for="toggle-milestone" class="toggle-label"></label>
-            </div>
-        </div>
-    </section>
+
     <section class="settings-section">
         <h2>Konto</h2>
         <div class="setting-item">
