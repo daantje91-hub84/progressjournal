@@ -1,197 +1,37 @@
 // ===================================================================
 // GLOBALER ANWENDUNGSZUSTAND
 // ===================================================================
-// Der aktuelle View, der in der Haupt-Content-Sektion geladen ist.
 let currentView = 'dashboard-empty-content';
-// Die ID des aktuell ausgewählten Projekts (für die Detailansicht).
 let currentProjectId = null;
-// Temporärer Speicher für die Wizard-Daten, bis ein Projekt erstellt wird.
-let newProjectData = {
-    goal: null,
-    deadline: null,
-    deadlineType: null,
-    startingPoint: null,
-    generatedPlan: null,
-    wizardType: null,
-    context_id: null
-};
+// ... (restlicher globaler Zustand)
 
-// Zustand für den Pomodoro Timer
-let pomodoroTimer = {
-    DEFAULT_TIME: 25 * 60, // 25 Minuten in Sekunden
-    timeLeft: 25 * 60,
-    isRunning: false,
-    interval: null,
-    activeTaskId: null
-};
+// HINWEIS: window.currentView wird für den Zugriff aus navigation.js benötigt
+window.currentView = currentView;
 
-// Zustand für den Inbox-Verarbeitungs-Wizard
-let processWizardState = {
-    isOpen: false,
-    currentStep: 1,
-    taskId: null,
-    taskText: ''
-};
 
 // ===================================================================
-// KERN-INITIALISIERUNG DER APP - KORRIGIERT
+// KERN-INITIALISIERUNG DER APP
 // ===================================================================
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('DOM loaded, initializing app...');
-    
-    // Navigations-Menü für mobile Geräte einrichten
-    const hamburgerBtn = document.getElementById('hamburger');
-    if (hamburgerBtn) {
-        if (window.innerWidth >= 768) {
-            document.body.classList.add('sidenav-expanded');
+    // Die Navigations-Initialisierung befindet sich jetzt in navigation.js
+
+    document.getElementById('app-content').addEventListener('click', (e) => {
+        if (e.target.closest('#back-to-projects')) {
+            e.preventDefault();
+            navigateTo('projects-content');
         }
-        hamburgerBtn.addEventListener('click', () => {
-            document.body.classList.toggle('sidenav-expanded');
-        });
-    }
+    });
 
-    // KORREKTUR: Navigation Event-Listener richtig einrichten
-    setupNavigationListeners();
-
-    // Event-Listener für den "Zurück"-Button im Projekt-Detail
-    const appContent = document.getElementById('app-content');
-    if (appContent) {
-        appContent.addEventListener('click', (e) => {
-            if (e.target.closest('#back-to-projects')) {
-                e.preventDefault();
-                navigateTo('projects-content');
-            }
-        });
-    }
-
-    // Quick-Add initialisieren
     initializeQuickAdd();
-
-    // Startet die App, indem das Dashboard geladen wird
     navigateTo('dashboard');
 });
 
-// NEUE FUNKTION: Navigation Event-Listener einrichten
-function setupNavigationListeners() {
-    console.log('Setting up navigation listeners...');
-    
-    const navItems = document.querySelectorAll('.app-nav .nav-item');
-    console.log('Found nav items:', navItems.length);
-    
-    navItems.forEach((navItem, index) => {
-        console.log(`Setting up listener for nav item ${index}:`, navItem.dataset.nav);
-        
-        navItem.addEventListener('click', (e) => {
-            e.preventDefault();
-            const targetView = navItem.dataset.nav;
-            console.log('Navigation clicked:', targetView);
-            
-            if (targetView) {
-                navigateTo(targetView);
-            } else {
-                console.error('No data-nav attribute found on nav item');
-            }
-        });
-    });
-}
 
-// ERWEITERTE navigateTo Funktion mit besserer Fehlerbehandlung
-async function navigateTo(viewId, params = {}) {
-    console.log(`Navigiere zu: ${viewId}`, params);
-    
-    if (!viewId) {
-        console.error('Keine viewId angegeben');
-        return;
-    }
-    
-    if (params.projectId) {
-        currentProjectId = params.projectId;
-    }
-
-    let viewFileToFetch = viewId;
-    
-    // Special case für Dashboard
-    if (viewId === 'dashboard') {
-        viewFileToFetch = mockDB.getActiveProjects().length > 0 ?
-            'dashboard-filled-content' :
-            'dashboard-empty-content';
-    }
-
-    const appContent = document.getElementById('app-content');
-    if (!appContent) {
-        console.error('app-content Element nicht gefunden!');
-        return;
-    }
-
-    try {
-        console.log(`Lade Datei: ${viewFileToFetch}.html`);
-        const response = await fetch(`${viewFileToFetch}.html`);
-        
-        if (!response.ok) {
-            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-        }
-
-        const content = await response.text();
-        appContent.innerHTML = content;
-        currentView = viewFileToFetch;
-
-        console.log(`View erfolgreich geladen: ${currentView}`);
-        
-        updateNavState();
-        runViewSpecificScripts();
-        
-    } catch (error) {
-        console.error('Navigation fehlgeschlagen:', error);
-        appContent.innerHTML = `
-            <div class="error-state" style="padding: 40px; text-align: center;">
-                <h1>Fehler beim Laden</h1>
-                <p>Die Seite "${viewFileToFetch}.html" konnte nicht geladen werden.</p>
-                <p style="color: #666; font-size: 14px;">Fehler: ${error.message}</p>
-                <button onclick="navigateTo('dashboard')" class="button-cta" style="margin-top: 20px;">
-                    Zurück zum Dashboard
-                </button>
-            </div>
-        `;
-    }
-}
-
-// VERBESSERTE updateNavState Funktion
-function updateNavState() {
-    console.log('Updating nav state for:', currentView);
-    
-    const navItems = document.querySelectorAll('.app-nav .nav-item');
-    
-    navItems.forEach(item => {
-        item.classList.remove('active');
-        const navTarget = item.dataset.nav;
-
-        // Logik für das aktive Navigations-Item
-        let isActive = false;
-        
-        if (navTarget === 'dashboard' && currentView.startsWith('dashboard')) {
-            isActive = true;
-        } else if (navTarget === 'projects-content' && currentView === 'project-detail-content') {
-            isActive = true;
-        } else if (navTarget === currentView) {
-            isActive = true;
-        }
-        
-        if (isActive) {
-            item.classList.add('active');
-            console.log('Active nav item set to:', navTarget);
-        }
-    });
-}
 // ===================================================================
 // KERN-NAVIGATION & VIEW-MANAGEMENT
 // ===================================================================
 const appContent = document.getElementById('app-content');
 
-/**
- * Lädt einen neuen View in die Haupt-Content-Sektion der App.
- * @param {string} viewId - Die ID des zu ladenden Views (z.B. 'dashboard-empty-content').
- * @param {object} [params={}] - Optionale Parameter für den View (z.B. projectId).
- */
 async function navigateTo(viewId, params = {}) {
     console.log(`Navigiere zu: ${viewId}`, params);
     if (params.projectId) {
@@ -200,19 +40,20 @@ async function navigateTo(viewId, params = {}) {
 
     let viewFileToFetch = viewId;
     if (viewId === 'dashboard') {
-        viewFileToFetch = mockDB.getActiveProjects().length > 0 ?
+        viewFileToFetch = database.getActiveProjects().length > 0 ?
             'dashboard-filled-content' :
             'dashboard-empty-content';
     }
 
     try {
-        const response = await fetch(`${viewFileToFetch}.html`);
+        const response = await fetch(`views/${viewFileToFetch}.html`); // Pfad angepasst
         if (!response.ok) {
-            throw new Error(`Laden von ${viewFileToFetch}.html fehlgeschlagen`);
+            throw new Error(`Laden von views/${viewFileToFetch}.html fehlgeschlagen`);
         }
 
         appContent.innerHTML = await response.text();
         currentView = viewFileToFetch;
+        window.currentView = currentView; // Globale Variable aktualisieren
 
         updateNavState();
         runViewSpecificScripts();
@@ -221,26 +62,7 @@ async function navigateTo(viewId, params = {}) {
         appContent.innerHTML = `<div class="error-state"><h1>Fehler</h1><p>Die Seite konnte nicht geladen werden.</p></div>`;
     }
 }
-
-/**
- * Aktualisiert den aktiven Zustand der Navigationslinks.
- */
-function updateNavState() {
-    document.querySelectorAll('.app-nav .nav-item').forEach(item => {
-        item.classList.remove('active');
-        const navTarget = item.dataset.nav;
-
-        // Logik für das aktive Navigations-Item
-        if (
-            (navTarget === 'dashboard' && currentView.startsWith('dashboard')) ||
-            (navTarget === 'projects-content' && currentView === 'project-detail-content') ||
-            navTarget === currentView
-        ) {
-            item.classList.add('active');
-        }
-    });
-}
-
+// ... (der Rest der app.js, abzüglich der ausgelagerten Navigationslogik)
 // ===================================================================
 // VIEW-SPEZIFISCHER SCRIPT-LADER
 // ===================================================================
@@ -281,7 +103,7 @@ function renderDashboard() {
     const projectsGrid = document.getElementById('projects-grid');
     if (!projectsGrid) return;
     projectsGrid.innerHTML = ''; // Leert den Grid
-    mockDB.getActiveProjects().forEach(project => {
+    database.getActiveProjects().forEach(project => {
         projectsGrid.innerHTML += createProjectCardHtml(project);
     });
     addProjectCardListeners();
@@ -295,7 +117,7 @@ function renderProjects() {
     const projectsGrid = document.getElementById('projects-grid-projects');
     if (!projectsGrid) return;
     projectsGrid.innerHTML = '';
-    mockDB.projects.forEach(project => {
+    database.projects.forEach(project => {
         projectsGrid.innerHTML += createProjectCardHtml(project);
     });
     addProjectCardListeners();
@@ -325,14 +147,14 @@ function renderToday() {
         todayDateEl.textContent = new Date().toLocaleDateString('de-DE', { weekday: 'long', month: 'long', day: 'numeric' });
     }
 
-    const todayTasks = mockDB.getTodayTasks();
-    const settings = mockDB.getUserSettings();
+    const todayTasks = database.getTodayTasks();
+    const settings = database.getUserSettings();
 
     // Tages-Cockpit aktualisieren - MIT ZUSÄTZLICHEN CHECKS
     const completedTasksCount = todayTasks.filter(t => t.completed).length;
     const completedPomodorosCount = todayTasks.reduce((sum, task) => sum + (task.pomodoro_completed || 0), 0);
-    const activeStreaksCount = mockDB.getActiveStreaksCount();
-    const customTrackers = mockDB.getCustomTrackers();
+    const activeStreaksCount = database.getActiveStreaksCount();
+    const customTrackers = database.getCustomTrackers();
 
     // SICHERE Aktualisierung für Aufgaben
     const tasksCurrentEl = document.getElementById('tasks-completed-stat');
@@ -369,8 +191,8 @@ function renderToday() {
     // Rest der Funktion...
     if (todayTasks.length > 0) {
         todayList.innerHTML = todayTasks.map(task => {
-            const project = task.project_id ? mockDB.getProjectById(task.project_id) : null;
-            const streak = task.recurrence_rule ? mockDB.getStreakByTaskId(task.id) : null;
+            const project = task.project_id ? database.getProjectById(task.project_id) : null;
+            const streak = task.recurrence_rule ? database.getStreakByTaskId(task.id) : null;
 
             return `
                 <div class="today-task-item ${task.completed ? 'completed' : ''}" data-task-id="${task.id}">
@@ -454,7 +276,7 @@ function renderInbox() {
         return;
     }
     
-    const inboxTasks = mockDB.getInboxTasks();
+    const inboxTasks = database.getInboxTasks();
     if (inboxTasks.length > 0) {
         inboxListContainer.innerHTML = inboxTasks.map(task => `
             <div class="inbox-item" data-task-id="${task.id}">
@@ -549,7 +371,7 @@ function formatRelativeTime(date) {
 
 
 function renderSettings() {
-    const settings = mockDB.getUserSettings();
+    const settings = database.getUserSettings();
     if (!settings) {
         console.error("Benutzereinstellungen nicht gefunden!");
         return;
@@ -572,12 +394,12 @@ function renderSettings() {
 
 function renderProjectDetails() {
     if (!currentProjectId) return;
-    const project = mockDB.getProjectById(currentProjectId);
+    const project = database.getProjectById(currentProjectId);
     if (!project) return;
 
     document.getElementById('project-title').textContent = project.title;
 
-    const progress = mockDB.calculateProjectProgress(currentProjectId);
+    const progress = database.calculateProjectProgress(currentProjectId);
     const progressBar = document.getElementById('project-progress-fill');
     if (progressBar) {
         progressBar.style.width = `${progress}%`;
@@ -587,7 +409,7 @@ function renderProjectDetails() {
     if (!timelineContainer) return;
     timelineContainer.innerHTML = '';
     
-    const projectTasks = mockDB.getTasksByProjectId(currentProjectId);
+    const projectTasks = database.getTasksByProjectId(currentProjectId);
     
     project.milestones.forEach(milestone => {
         timelineContainer.innerHTML += `<div class="milestone">
@@ -611,13 +433,13 @@ function renderProjectDetails() {
 
 /**
  * Erstellt den HTML-Code für eine Projektkarte.
- * @param {object} project - Das Projekt-Objekt aus der mockDB.
+ * @param {object} project - Das Projekt-Objekt aus der database.
  * @returns {string} - Der generierte HTML-String.
  */
 function createProjectCardHtml(project) {
-    const progress = mockDB.calculateProjectProgress(project.id);
-    const context = mockDB.getContextById(project.context_id);
-    const projectTasks = mockDB.getTasksByProjectId(project.id);
+    const progress = database.calculateProjectProgress(project.id);
+    const context = database.getContextById(project.context_id);
+    const projectTasks = database.getTasksByProjectId(project.id);
     const nextTask = projectTasks.find(t => !t.completed);
 
     return `
@@ -681,11 +503,11 @@ function addTaskListeners() {
     document.querySelectorAll('.task-item').forEach(taskItem => {
         taskItem.addEventListener('click', (e) => {
             const taskId = taskItem.dataset.taskId;
-            if (mockDB.toggleTaskCompleted(taskId)) {
+            if (database.toggleTaskCompleted(taskId)) {
                 taskItem.classList.toggle('completed');
-                const project = mockDB.getProjectById(currentProjectId);
+                const project = database.getProjectById(currentProjectId);
                 if (project) {
-                    const progress = mockDB.calculateProjectProgress(currentProjectId);
+                    const progress = database.calculateProjectProgress(currentProjectId);
                     const progressBar = document.getElementById('project-progress-fill');
                     if (progressBar) {
                         progressBar.style.width = `${progress}%`;
@@ -724,7 +546,7 @@ async function startProjectWizard() {
         // Fallback: Einfaches Eingabefenster
         const projectName = prompt("Projekt-Name eingeben:");
         if (projectName) {
-            const newProject = mockDB.addProject({
+            const newProject = database.addProject({
                 title: projectName,
                 context_id: 'ctx_1', // Standard-Kontext
                 milestones: [{ title: 'Erster Meilenstein', duration: 'Woche 1' }]
@@ -958,7 +780,7 @@ function populateContextOptions() {
     }
     
     optionsContainer.innerHTML = '';
-    mockDB.contexts.forEach(context => {
+    database.contexts.forEach(context => {
         optionsContainer.innerHTML += `<button type="button" class="option-button" data-value="${context.id}">${context.emoji} ${context.title}</button>`;
     });
     console.log('Kontext-Optionen geladen');
@@ -973,11 +795,11 @@ function populateAusgangslageOptions() {
     
     optionsContainer.innerHTML = '';
     const contextId = newProjectData.context_id;
-    const context = mockDB.contexts.find(c => c.id === contextId);
+    const context = database.contexts.find(c => c.id === contextId);
     
-    let relevantTemplates = mockDB.ausgangslage?.standard || [];
-    if (context && mockDB.ausgangslage && mockDB.ausgangslage[context.title.toLowerCase().split(' ')[0]]) {
-        relevantTemplates = mockDB.ausgangslage[context.title.toLowerCase().split(' ')[0]];
+    let relevantTemplates = database.ausgangslage?.standard || [];
+    if (context && database.ausgangslage && database.ausgangslage[context.title.toLowerCase().split(' ')[0]]) {
+        relevantTemplates = database.ausgangslage[context.title.toLowerCase().split(' ')[0]];
     }
 
     relevantTemplates.forEach(template => {
@@ -993,14 +815,14 @@ function generateAiPlan() {
         return;
     }
     
-    const context = mockDB.contexts.find(c => c.id === newProjectData.context_id);
+    const context = database.contexts.find(c => c.id === newProjectData.context_id);
     const contextKey = context ? context.title.toLowerCase().split(' ')[0] : 'standard';
 
     let templateData;
-    if (mockDB.planTemplates && mockDB.planTemplates[contextKey] && mockDB.planTemplates[contextKey][newProjectData.startingPoint]) {
-        templateData = mockDB.planTemplates[contextKey][newProjectData.startingPoint];
-    } else if (mockDB.planTemplates && mockDB.planTemplates.standard) {
-        templateData = mockDB.planTemplates.standard;
+    if (database.planTemplates && database.planTemplates[contextKey] && database.planTemplates[contextKey][newProjectData.startingPoint]) {
+        templateData = database.planTemplates[contextKey][newProjectData.startingPoint];
+    } else if (database.planTemplates && database.planTemplates.standard) {
+        templateData = database.planTemplates.standard;
     } else {
         // Fallback wenn keine Templates existieren
         templateData = [
@@ -1060,7 +882,7 @@ function createNewProject() {
     }
     
     try {
-        const newProject = mockDB.addProject({
+        const newProject = database.addProject({
             title: projectTitle,
             context_id: newProjectData.context_id || 'ctx_1',
             milestones: milestones
@@ -1080,7 +902,7 @@ function addTodayListeners() {
     document.querySelectorAll('.today-task-item').forEach(item => {
         item.querySelector('.task-checkbox').addEventListener('click', () => {
             const taskId = item.dataset.taskId;
-            mockDB.toggleTaskCompleted(taskId);
+            database.toggleTaskCompleted(taskId);
             renderToday();
         });
 
@@ -1144,9 +966,9 @@ function tick() {
         clearInterval(pomodoroTimer.interval);
         pomodoroTimer.isRunning = false;
         if (pomodoroTimer.activeTaskId) {
-            const task = mockDB.getTaskById(pomodoroTimer.activeTaskId);
+            const task = database.getTaskById(pomodoroTimer.activeTaskId);
             if (task) {
-                mockDB.updateTask(pomodoroTimer.activeTaskId, { pomodoro_completed: task.pomodoro_completed + 1 });
+                database.updateTask(pomodoroTimer.activeTaskId, { pomodoro_completed: task.pomodoro_completed + 1 });
             }
         }
         alert("Pomodoro-Einheit abgeschlossen! Zeit für eine Pause.");
@@ -1198,7 +1020,7 @@ function saveQuickAddItem() {
     const input = document.getElementById('quick-add-input');
     const text = input.value.trim();
     if (text) {
-        mockDB.addTask({ text: text });
+        database.addTask({ text: text });
         closeQuickAddModal();
         if (currentView === 'inbox-content') renderInbox();
     }
@@ -1210,7 +1032,7 @@ function addInboxListeners() {
         addBtn.addEventListener('click', () => {
             const text = inputField.value.trim();
             if (text) {
-                mockDB.addTask({ text: text });
+                database.addTask({ text: text });
                 inputField.value = '';
                 renderInbox();
             }
@@ -1225,7 +1047,7 @@ function addInboxListeners() {
             const itemElement = e.currentTarget.closest('.inbox-item');
             const taskId = itemElement.dataset.taskId;
             if (confirm(`Möchtest du diesen Eintrag wirklich löschen?`)) {
-                mockDB.deleteTask(taskId);
+                database.deleteTask(taskId);
                 renderInbox();
             }
         });
@@ -1234,7 +1056,7 @@ function addInboxListeners() {
     document.querySelectorAll('.process-item-btn, #process-inbox-btn').forEach(btn => {
         btn.addEventListener('click', (e) => {
             const itemElement = e.currentTarget.closest('.inbox-item');
-            const taskId = itemElement ? itemElement.dataset.taskId : mockDB.getInboxTasks()[0]?.id;
+            const taskId = itemElement ? itemElement.dataset.taskId : database.getInboxTasks()[0]?.id;
             if (taskId) {
                 startProcessWizard(taskId);
             } else {
@@ -1272,7 +1094,7 @@ async function startProcessWizard(taskId) {
         return;
     }
     
-    const task = mockDB.getTaskById(taskId);
+    const task = database.getTaskById(taskId);
     if (!task) {
         console.error("Aufgabe für Wizard nicht gefunden");
         return;
@@ -1317,7 +1139,7 @@ function setupProcessWizardStep(step) {
                 closeProcessWizard();
             };
             wizard.querySelector('[data-action="trash"]').onclick = () => {
-                mockDB.deleteTask(processWizardState.taskId);
+                database.deleteTask(processWizardState.taskId);
                 closeProcessWizard();
             };
             break;
@@ -1329,17 +1151,17 @@ function setupProcessWizardStep(step) {
             wizard.querySelector('[data-action="single_task"]').onclick = () => goToProcessStep(3);
             break;
         case 3:
-            const projects = mockDB.getActiveProjects();
+            const projects = database.getActiveProjects();
             const container = document.getElementById('project-list-container');
             container.innerHTML = projects.map(p => `
                 <button type="button" class="option-button" data-project-id="${p.id}">
-                     ${mockDB.getContextById(p.context_id)?.emoji || '📁'} ${p.title}
+                     ${database.getContextById(p.context_id)?.emoji || '📁'} ${p.title}
                 </button>
             `).join('');
             
             container.querySelectorAll('.option-button').forEach(btn => {
                 btn.onclick = () => {
-                    mockDB.updateTask(processWizardState.taskId, { project_id: btn.dataset.projectId });
+                    database.updateTask(processWizardState.taskId, { project_id: btn.dataset.projectId });
                     closeProcessWizard();
                 };
             });
@@ -1358,9 +1180,9 @@ function setupProcessWizardStep(step) {
  * @returns {string} 
  */
 function createProjectCardHtml(project) {
-    const progress = mockDB.calculateProjectProgress(project.id);
-    const context = mockDB.getContextById(project.context_id);
-    const projectTasks = mockDB.getTasksByProjectId(project.id);
+    const progress = database.calculateProjectProgress(project.id);
+    const context = database.getContextById(project.context_id);
+    const projectTasks = database.getTasksByProjectId(project.id);
     const nextTask = projectTasks.find(t => !t.completed);
 
     return `

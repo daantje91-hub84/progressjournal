@@ -1,4 +1,4 @@
-// PROGRESS JOURNAL - MOCK DATABASE V5.0 (with Custom Trackers)
+// PROGRESS JOURNAL - DATABASE V0.1 (with Custom Trackers)
 // ===================================================================
 
 // Helfer, um das heutige und morgige Datum dynamisch zu erzeugen
@@ -8,7 +8,7 @@ const tomorrowDate = new Date();
 tomorrowDate.setDate(todayDate.getDate() + 1);
 const tomorrowString = tomorrowDate.toISOString().slice(0, 10);
 
-const mockDB = {
+const database = {
     users: [ { id: 'user_123', name: 'Max Mustermann', email: 'max@email.com' } ],
     user_settings: [
         {
