@@ -1048,3 +1048,40 @@ body {
   font-size: 14px;
   color: var(--muted);
 }
+/* === 17. Kontext-Stile (NEU) === */
+
+.card-context {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--muted);
+    background-color: var(--light-gray);
+    padding: 6px 12px;
+    border-radius: var(--radius) var(--radius) 0 0;
+    margin: -20px -20px 16px -20px; /* Zieht den Header an den oberen Rand der Karte */
+    border-bottom: 1px solid var(--border-color);
+}/* Am Ende der style.css hinzufügen */
+
+/* Am Ende der style.css hinzufügen */
+
+.option-button-new {
+    display: flex; /* Stellt Icon und Text nebeneinander */
+    align-items: center;
+    justify-content: center;
+    gap: 8px; /* Abstand zwischen Icon und Text */
+    width: 100%;
+    padding: 16px;
+    border-radius: var(--radius);
+    font-size: 16px;
+    font-weight: 600;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.2s, color 0.2s;
+    border: 2px dashed var(--border-color);
+    color: var(--muted);
+    background: transparent;
+}
+
+.option-button-new:hover {
+    border-color: var(--main-blue);
+    color: var(--main-blue);
+}

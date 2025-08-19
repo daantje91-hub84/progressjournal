@@ -1,235 +1,148 @@
 // ===================================================================
-// PROGRESS JOURNAL - MAIN APP CONTROLLER
+// PROGRESS JOURNAL - MOCK DATABASE V2.2 (Final Korrigiert)
 // ===================================================================
 
-// Global state
-let currentView = 'dashboard-empty';
-let currentProjectId = null;
-let newProjectData = { 
-    goal: null, 
-    deadline: null, 
-    deadlineType: null, 
-    startingPoint: null, 
-    generatedPlan: null, 
-    wizardType: null 
-};
+const mockDB = {
+    // ---------------------------------------------------------------
+    // TABELLEN
+    // ---------------------------------------------------------------
+    contexts: [
+        { id: 'ctx_1', title: 'Sport & Körper', emoji: '🏃‍♂️' },
+        { id: 'ctx_2', title: 'Künstlerische Projekte', emoji: '🎭' },
+        { id: 'ctx_3', title: 'Organisation & Tools', emoji: '🛠️' },
+        { id: 'ctx_4', title: 'Beziehungen', emoji: '❤️' }
+    ],
 
-// Timer state
-let pomodoroTimer = {
-    timeLeft: 25 * 60,
-    isRunning: false,
-    interval: null
-};
-
-// DOM Elements
-const appContent = document.getElementById('app-content');
-
-// ===================================================================
-// CORE NAVIGATION & VIEW MANAGEMENT
-// ===================================================================
-
-async function navigateTo(viewId, params = {}) {
-    console.log(`Navigating to: ${viewId}`, params);
-    
-    // Store params for views that need them
-    if (params.projectId) {
-        currentProjectId = params.projectId;
-    }
-    
-    try {
-        const response = await fetch(`${viewId}.html`);
-        if (!response.ok) {
-            throw new Error(`Failed to load ${viewId}.html`);
+    projects: [
+        {
+            id: 'proj_1660844400000',
+            context_id: 'ctx_1',
+            title: 'Marathon unter 4 Stunden laufen',
+            status: 'active',
+            milestones: [
+                {
+                    id: 'ms_1',
+                    title: 'Grundlagen schaffen',
+                    status: 'current',
+                    order: 1,
+                    tasks: [
+                        { id: 'task_1_1', text: 'Die richtigen Laufschuhe kaufen', completed: true },
+                        { id: 'task_1_2', text: 'Einen 16-Wochen-Trainingsplan recherchieren', completed: true },
+                        { id: 'task_1_3', text: 'Ersten Trainingslauf absolvieren', completed: false }
+                    ]
+                },
+                {
+                    id: 'ms_2',
+                    title: 'Distanz langsam steigern',
+                    status: 'upcoming',
+                    order: 2,
+                    tasks: [
+                        { id: 'task_2_1', text: 'Ersten 10km-Lauf schaffen', completed: false },
+                        { id: 'task_2_2', text: 'Wöchentlichen Langen Lauf (LSD) etablieren', completed: false }
+                    ]
+                }
+            ]
         }
-        const html = await response.text();
-        appContent.innerHTML = html;
-        currentView = viewId;
-        updateNavState();
-        await runViewSpecificScripts();
-    } catch (error) {
-        console.error('Navigation failed:', error);
-        appContent.innerHTML = `<div class="error-state"><h1>Fehler</h1><p>Die Seite konnte nicht geladen werden.</p></div>`;
-    }
-}
+    ],
 
-function updateNavState() {
-    document.querySelectorAll('.app-nav .nav-item').forEach(item => {
-        item.classList.remove('active');
-        if (item.dataset.nav === currentView || 
-            (currentView.includes('dashboard') && item.dataset.nav === 'dashboard-empty') ||
-            (currentView.includes('project-detail') && item.dataset.nav === 'projects-content')) {
-            item.classList.add('active');
+    inboxItems: [
+        { id: 'inbox_1', text: 'Neues Buch über Stoizismus recherchieren' },
+        { id: 'inbox_2', text: 'Geschenkidee für Annas Geburtstag' },
+    ],
+
+    todayTasks: [
+         { id: 'task_today_1', text: 'Ersten Trainingslauf absolvieren', completed: false, project: { id: 'proj_1660844400000', name: 'Marathon laufen' } }
+    ],
+    
+    ausgangslage: {
+        standard: [{id: 'beginner', text: 'Anfänger'}, {id: 'advanced', text: 'Fortgeschritten'}],
+        laufen: [{id: 'running_beginner', text: 'Ich laufe selten'}, {id: 'running_advanced', text: 'Ich laufe regelmäßig 5km'}],
+        lernen: [{id: 'learning_beginner', text: 'Ich habe keine Vorkenntnisse'}, {id: 'learning_advanced', text: 'Ich habe bereits Grundlagenwissen'}],
+    },
+
+    planTemplates: {
+        standard: [
+            { title: 'Recherche & Planung', duration: 'Woche 1' },
+            { title: 'Erste Schritte umsetzen', duration: 'Woche 2-3' },
+            { title: 'Fortschritt überprüfen & anpassen', duration: 'Woche 4' },
+        ],
+        laufen: {
+            running_beginner: [
+                { title: 'Grundlagen schaffen (2-3 Läufe/Woche)', duration: 'Woche 1-4' },
+                { title: 'Distanz langsam steigern auf 10km', duration: 'Woche 5-8' },
+                { title: 'Intensität erhöhen & Tempotraining', duration: 'Woche 9-12' },
+                { title: 'Wettkampfvorbereitung & Tapering', duration: 'Woche 13-16' },
+            ],
+            running_advanced: [
+                 { title: 'Umfang erhöhen', duration: 'Woche 1-3' },
+                 { title: 'Spezifisches Tempotraining', duration: 'Woche 4-8' },
+                 { title: 'Lange Läufe intensivieren', duration: 'Woche 9-12' },
+                 { title: 'Tapering & finale Vorbereitung', duration: 'Woche 13-16' },
+            ]
+        },
+    },
+
+    // ---------------------------------------------------------------
+    // DATENZUGRIFFS-FUNKTIONEN
+    // ---------------------------------------------------------------
+    calculateProjectProgress: function(projectId) {
+        const project = this.getProjectById(projectId);
+        if (!project || !project.milestones) return 0;
+        let totalTasks = 0;
+        let completedTasks = 0;
+        project.milestones.forEach(milestone => {
+            if (milestone.tasks) {
+                totalTasks += milestone.tasks.length;
+                completedTasks += milestone.tasks.filter(task => task.completed).length;
+            }
+        });
+        if (totalTasks === 0) return 0;
+        return Math.round((completedTasks / totalTasks) * 100);
+    },
+
+    getActiveProjects: function() {
+        return this.projects.filter(p => p.status === 'active');
+    },
+
+    getProjectById: function(projectId) {
+        return this.projects.find(p => p.id === projectId);
+    },
+
+    getContextById: function(contextId) {
+        if (!contextId) return undefined;
+        return this.contexts.find(c => c.id === contextId);
+    },
+
+    addProject: function(projectData) {
+        const newProject = {
+            id: `proj_${Date.now()}`,
+            context_id: projectData.context_id || null,
+            status: 'active',
+            title: projectData.title,
+            milestones: (projectData.milestones || []).map((m, index) => ({
+                id: `ms_${Date.now()}_${index}`,
+                title: m.title,
+                status: index === 0 ? 'current' : 'upcoming',
+                order: index + 1,
+                tasks: []
+            }))
+        };
+        this.projects.push(newProject);
+        return newProject;
+    },
+
+    toggleTaskCompleted: function(projectId, milestoneId, taskId) {
+        const project = this.getProjectById(projectId);
+        if (project) {
+            const milestone = project.milestones.find(m => m.id === milestoneId);
+            if (milestone) {
+                const task = milestone.tasks.find(t => t.id === taskId);
+                if (task) {
+                    task.completed = !task.completed;
+                    return true;
+                }
+            }
         }
-    });
-}
-
-// ===================================================================
-// VIEW-SPECIFIC RENDERING & LOGIC
-// ===================================================================
-
-async function runViewSpecificScripts() {
-    // Common scripts for all views
-    setupHamburgerMenu();
-    setupWizardTriggers();
-    
-    // View-specific logic
-    switch (currentView) {
-        case 'dashboard-empty':
-            renderEmptyDashboard();
-            break;
-        case 'dashboard-filled-content':
-            renderDashboard();
-            break;
-        case 'projects-content':
-            renderAllProjects();
-            break;
-        case 'project-detail-content':
-            renderProjectDetail();
-            break;
-        case 'today-content':
-            renderTodayView();
-            break;
-        case 'inbox-content':
-            renderInboxView();
-            break;
-        case 'timeline-content':
-            renderTimelineView();
-            break;
-        case 'settings-content':
-            renderSettingsView();
-            break;
+        return false;
     }
-}
-
-// ===================================================================
-// DASHBOARD RENDERING
-// ===================================================================
-
-function renderEmptyDashboard() {
-    // Empty dashboard is static, just needs wizard trigger
-    console.log('Empty dashboard rendered');
-}
-
-function renderDashboard() {
-    const projectsGrid = document.getElementById('projects-grid');
-    if (!projectsGrid) return;
-    
-    const activeProjects = mockDB.getActiveProjects().slice(0, 3); // Show max 3 on dashboard
-    
-    let html = '';
-    activeProjects.forEach(project => {
-        html += createProjectCardHTML(project);
-    });
-    
-    // Add placeholder card
-    html += `
-        <div class="project-card-placeholder" id="add-project-placeholder">
-            <span class="material-icons">add_circle_outline</span>
-            <span>Neues Projekt hinzufügen</span>
-        </div>
-    `;
-    
-    projectsGrid.innerHTML = html;
-    
-    // Add click handlers
-    setupProjectCardHandlers();
-}
-
-function renderAllProjects() {
-    const projectsGrid = document.getElementById('all-projects-grid');
-    if (!projectsGrid) return;
-    
-    const activeProjects = mockDB.getActiveProjects();
-    
-    let html = '';
-    activeProjects.forEach(project => {
-        html += createProjectCardHTML(project);
-    });
-    
-    // Add placeholder card
-    html += `
-        <div class="project-card-placeholder" id="add-project-placeholder">
-            <span class="material-icons">add_circle_outline</span>
-            <span>Neues Projekt hinzufügen</span>
-        </div>
-    `;
-    
-    projectsGrid.innerHTML = html;
-    setupProjectCardHandlers();
-}
-
-function createProjectCardHTML(project) {
-    return `
-        <div class="project-card" data-project-id="${project.id}">
-            <div class="card-header">
-                <h2 class="project-title">${project.title}</h2>
-                <span class="material-icons card-menu">more_vert</span>
-            </div>
-            <div class="card-body">
-                <p class="next-milestone">NÄCHSTER MEILENSTEIN:</p>
-                <p class="milestone-title">${project.nextMilestone?.title || 'Keine Meilensteine'}</p>
-            </div>
-            <div class="card-footer">
-                <div class="progress-info">
-                    <span class="progress-label">Fortschritt</span>
-                    <span class="progress-percent">${project.progress}%</span>
-                </div>
-                <div class="card-progress-bar">
-                    <div class="card-progress-fill" style="width: ${project.progress}%;"></div>
-                </div>
-            </div>
-        </div>
-    `;
-}
-
-// ===================================================================
-// PROJECT DETAIL RENDERING
-// ===================================================================
-
-function renderProjectDetail() {
-    if (!currentProjectId) return;
-    
-    const project = mockDB.getProjectById(currentProjectId);
-    if (!project) return;
-    
-    // Update project header
-    const projectTitle = document.getElementById('project-title');
-    const progressFill = document.getElementById('project-progress-fill');
-    
-    if (projectTitle) projectTitle.textContent = project.title;
-    if (progressFill) progressFill.style.width = `${project.progress}%`;
-    
-    // Render timeline
-    const timeline = document.getElementById('project-timeline');
-    if (!timeline) return;
-    
-    let html = '';
-    project.milestones.forEach((milestone, index) => {
-        const isLast = index === project.milestones.length - 1;
-        html += `
-            <div class="milestone ${milestone.status === 'current' ? 'current' : ''}">
-                <div class="milestone__line" ${isLast ? 'style="display: none;"' : ''}></div>
-                <div class="milestone__icon"><span class="material-icons">flag</span></div>
-                <div class="milestone__content">
-                    <div class="milestone__header">
-                        <h3>${milestone.title}</h3>
-                        <span>${milestone.duration}</span>
-                    </div>
-                    ${milestone.tasks?.length ? createTaskListHTML(milestone.tasks, project.id) : ''}
-                </div>
-            </div>
-        `;
-    });
-    
-    timeline.innerHTML = html;
-    setupTaskHandlers();
-}
-
-function createTaskListHTML(tasks, projectId) {
-    let html = '<ul class="task-list">';
-    tasks.forEach(task => {
-        html += `
-            <li class="task-item ${task.completed ? 'completed' : ''}" data-task-id="${task.id}" data-project-id="${projectId}">
-                <span class="task-checkbox">
-                    ${task.completed ? '<span class="material-icons">check</span>' : ''}
-                </span>
+}; // <-- DIESE SCHLIESSENDE KLAMMER HAT GEFEHLT.

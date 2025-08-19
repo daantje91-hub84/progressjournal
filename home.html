@@ -5,20 +5,17 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Progress Journal</title>
 
-  <!-- Verlinkung zur zentralen CSS-Datei -->
   <link rel="stylesheet" href="style.css">
 
-  <!-- Google Fonts & Icons -->
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700&family=IBM+Plex+Sans:wght@400;600;700&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 </head>
 <body class="app-body">
 
-  <!-- 1. App-Header & Navigation (Zentrale Shell) -->
   <header class="app-header">
     <div class="header-left">
       <span class="material-icons hamburger-menu" id="hamburger">menu</span>
-      <a href="#" class="app-header__logo" onclick="navigateTo('dashboard-empty')">
+      <a href="#" class="app-header__logo" onclick="event.preventDefault(); navigateTo('dashboard');">
         <div class="icon"><span class="material-icons">trending_up</span></div>
         <span class="text">Progress</span>
       </a>
@@ -30,7 +27,7 @@
     </div>
   </header>
   <nav class="app-nav">
-    <a href="#" class="nav-item active" data-nav="dashboard-empty"><span class="material-icons">space_dashboard</span><span class="nav-text">Dashboard</span></a>
+    <a href="#" class="nav-item active" data-nav="dashboard"><span class="material-icons">space_dashboard</span><span class="nav-text">Dashboard</span></a>
     <a href="#" class="nav-item" data-nav="inbox-content"><span class="material-icons">inbox</span><span class="nav-text">Inbox</span></a>
     <a href="#" class="nav-item" data-nav="today-content"><span class="material-icons">today</span><span class="nav-text">Heute</span></a>
     <a href="#" class="nav-item" data-nav="projects-content"><span class="material-icons">topic</span><span class="nav-text">Projekte</span></a>
@@ -38,9 +35,9 @@
     <a href="#" class="nav-item" data-nav="settings-content"><span class="material-icons">settings</span><span class="nav-text">Einstellungen</span></a>
   </nav>
 
-  <!-- 2. Main Content Area (Hier wird der dynamische Inhalt geladen) -->
   <main class="main-content" id="app-content"></main>
 
+  <script src="mockDB.js"></script>
   <script src="app.js"></script>
 
 </body>
