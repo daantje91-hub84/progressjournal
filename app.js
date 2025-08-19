@@ -34,10 +34,11 @@ let processWizardState = {
 };
 
 // ===================================================================
-// KERN-INITIALISIERUNG DER APP
+// KERN-INITIALISIERUNG DER APP - KORRIGIERT
 // ===================================================================
-// Wartet, bis das gesamte DOM geladen ist, bevor die App gestartet wird.
 document.addEventListener('DOMContentLoaded', () => {
+    console.log('DOM loaded, initializing app...');
+    
     // Navigations-Menü für mobile Geräte einrichten
     const hamburgerBtn = document.getElementById('hamburger');
     if (hamburgerBtn) {
@@ -49,29 +50,138 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Event-Listener für die Hauptnavigation
-    document.querySelectorAll('.app-nav .nav-item').forEach(navItem => {
-        navItem.addEventListener('click', (e) => {
-            e.preventDefault();
-            navigateTo(navItem.dataset.nav);
-        });
-    });
+    // KORREKTUR: Navigation Event-Listener richtig einrichten
+    setupNavigationListeners();
 
     // Event-Listener für den "Zurück"-Button im Projekt-Detail
-    document.getElementById('app-content').addEventListener('click', (e) => {
-        if (e.target.closest('#back-to-projects')) {
-            e.preventDefault();
-            navigateTo('projects-content');
-        }
-    });
+    const appContent = document.getElementById('app-content');
+    if (appContent) {
+        appContent.addEventListener('click', (e) => {
+            if (e.target.closest('#back-to-projects')) {
+                e.preventDefault();
+                navigateTo('projects-content');
+            }
+        });
+    }
 
+    // Quick-Add initialisieren
     initializeQuickAdd();
 
-    // Startet die App, indem das Dashboard geladen wird.
+    // Startet die App, indem das Dashboard geladen wird
     navigateTo('dashboard');
 });
 
+// NEUE FUNKTION: Navigation Event-Listener einrichten
+function setupNavigationListeners() {
+    console.log('Setting up navigation listeners...');
+    
+    const navItems = document.querySelectorAll('.app-nav .nav-item');
+    console.log('Found nav items:', navItems.length);
+    
+    navItems.forEach((navItem, index) => {
+        console.log(`Setting up listener for nav item ${index}:`, navItem.dataset.nav);
+        
+        navItem.addEventListener('click', (e) => {
+            e.preventDefault();
+            const targetView = navItem.dataset.nav;
+            console.log('Navigation clicked:', targetView);
+            
+            if (targetView) {
+                navigateTo(targetView);
+            } else {
+                console.error('No data-nav attribute found on nav item');
+            }
+        });
+    });
+}
 
+// ERWEITERTE navigateTo Funktion mit besserer Fehlerbehandlung
+async function navigateTo(viewId, params = {}) {
+    console.log(`Navigiere zu: ${viewId}`, params);
+    
+    if (!viewId) {
+        console.error('Keine viewId angegeben');
+        return;
+    }
+    
+    if (params.projectId) {
+        currentProjectId = params.projectId;
+    }
+
+    let viewFileToFetch = viewId;
+    
+    // Special case für Dashboard
+    if (viewId === 'dashboard') {
+        viewFileToFetch = mockDB.getActiveProjects().length > 0 ?
+            'dashboard-filled-content' :
+            'dashboard-empty-content';
+    }
+
+    const appContent = document.getElementById('app-content');
+    if (!appContent) {
+        console.error('app-content Element nicht gefunden!');
+        return;
+    }
+
+    try {
+        console.log(`Lade Datei: ${viewFileToFetch}.html`);
+        const response = await fetch(`${viewFileToFetch}.html`);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+
+        const content = await response.text();
+        appContent.innerHTML = content;
+        currentView = viewFileToFetch;
+
+        console.log(`View erfolgreich geladen: ${currentView}`);
+        
+        updateNavState();
+        runViewSpecificScripts();
+        
+    } catch (error) {
+        console.error('Navigation fehlgeschlagen:', error);
+        appContent.innerHTML = `
+            <div class="error-state" style="padding: 40px; text-align: center;">
+                <h1>Fehler beim Laden</h1>
+                <p>Die Seite "${viewFileToFetch}.html" konnte nicht geladen werden.</p>
+                <p style="color: #666; font-size: 14px;">Fehler: ${error.message}</p>
+                <button onclick="navigateTo('dashboard')" class="button-cta" style="margin-top: 20px;">
+                    Zurück zum Dashboard
+                </button>
+            </div>
+        `;
+    }
+}
+
+// VERBESSERTE updateNavState Funktion
+function updateNavState() {
+    console.log('Updating nav state for:', currentView);
+    
+    const navItems = document.querySelectorAll('.app-nav .nav-item');
+    
+    navItems.forEach(item => {
+        item.classList.remove('active');
+        const navTarget = item.dataset.nav;
+
+        // Logik für das aktive Navigations-Item
+        let isActive = false;
+        
+        if (navTarget === 'dashboard' && currentView.startsWith('dashboard')) {
+            isActive = true;
+        } else if (navTarget === 'projects-content' && currentView === 'project-detail-content') {
+            isActive = true;
+        } else if (navTarget === currentView) {
+            isActive = true;
+        }
+        
+        if (isActive) {
+            item.classList.add('active');
+            console.log('Active nav item set to:', navTarget);
+        }
+    });
+}
 // ===================================================================
 // KERN-NAVIGATION & VIEW-MANAGEMENT
 // ===================================================================
