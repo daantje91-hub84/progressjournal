@@ -4,36 +4,22 @@
         <p id="current-date"></p>
     </div>
 </div>
-
-<!-- NEUE LAYOUT-STRUKTUR FÜR COCKPIT UND TIMER -->
-<div class="today-top-container">
-    
-    <!-- TAGES-COCKPIT (links) -->
-    <div id="daily-cockpit" class="daily-cockpit">
-        <h3>Tagesfokus</h3>
-        <div class="cockpit-goals">
-            <div class="goal-stat">
-                <div class="stat-value" id="tasks-completed-stat">0/0</div>
-                <div class="stat-label">Aufgaben</div>
-            </div>
-            <div class="goal-stat">
-                <div class="stat-value" id="pomodoros-completed-stat">0/0</div>
-                <div class="stat-label">Pomodoros</div>
-            </div>
-        </div>
-    </div>
-
-    <!-- POMODORO TIMER (rechts) -->
-    <div class="pomodoro-timer">
+<div class="pomodoro-timer">
+    <div class="timer-display-container">
         <div class="timer-display" id="timer-display">25:00</div>
-        <div class="timer-controls">
-            <button id="start-pause-btn" class="timer-btn"><span class="material-icons">play_arrow</span> Start</button>
-            <button id="reset-btn" class="timer-btn secondary"><span class="material-icons">replay</span></button>
-        </div>
+        <div class="streak-display-pomodoro"><span class="material-icons">local_fire_department</span><span id="pomodoro-streak">0</span></div>
+    </div>
+    <div class="timer-controls">
+        <button id="start-pause-btn" class="timer-btn"><span class="material-icons">play_arrow</span> Start</button>
+        <button id="reset-btn" class="timer-btn secondary"><span class="material-icons">replay</span></button>
     </div>
 </div>
 
-<!-- Liste der heutigen Aufgaben -->
+<!-- NEU: Abschnitt für Score-Widgets -->
+<div class="score-widgets" id="score-widgets">
+    <!-- Widgets werden hier per JavaScript eingefügt -->
+</div>
+
 <div class="today-list" id="today-list">
-    <!-- Dynamischer Inhalt wird hier eingefügt -->
+    <!-- Today tasks werden hier per JavaScript eingefügt -->
 </div>
