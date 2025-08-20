@@ -1,5 +1,5 @@
 // ===================================================================
-// PROGRESS JOURNAL - DATABASE V0.6 (Tasks with Time)
+// PROGRESS JOURNAL - DATABASE V0.8 (with Fixed Appointments)
 // ===================================================================
 
 // Helfer, um das heutige und gestrige Datum dynamisch zu erzeugen
@@ -30,44 +30,67 @@ const database = {
             pomodoro_work_duration: 25,
             pomodoro_short_break: 5,
             default_rest_days: [6, 0], // Sa, So
+            enable_task_blocking: true, 
             vacation_mode_active: false,
             vacation_start_date: null,
             vacation_end_date: null,
             tracked_metrics_ids: ['tracker_1', 'tracker_2']
         }
     ],
-    // ...
+    custom_trackers: [
+        { id: 'tracker_1', user_id: 'user_123', name: 'Schach-Elo', value: '1450', unit: 'Punkte' },
+        { id: 'tracker_2', user_id: 'user_123', name: 'Laufpace', value: '5:30', unit: 'min/km' }
+    ],
+    contexts: [
+        { id: 'ctx_1', title: 'Sport & Körper', emoji: '🏃‍♂️' },
+        { id: 'ctx_2', title: 'Künstlerische Projekte', emoji: '🎭' },
+        { id: 'ctx_3', title: 'Organisation & Tools', emoji: '🛠️' },
+        { id: 'ctx_4', title: 'Persönliche Entwicklung', emoji: '🧠'}
+    ],
+    projects: [
+        {
+            id: 'proj_1',
+            user_id: 'user_123',
+            context_id: 'ctx_1',
+            title: 'Marathon unter 4 Stunden laufen',
+            status: 'active',
+            milestones: [
+                { id: 'ms_1', title: 'Grundlagen schaffen', order: 1 },
+                { id: 'ms_2', title: 'Distanz langsam steigern', order: 2 }
+            ]
+        }
+    ],
     tasks: [
-        // --- Habits ---
         {
             id: 'task_habit_2', user_id: 'user_123', project_id: null, milestone_id: null, text: 'Taktikaufgaben Schach', completed: false, created_at: '2025-08-01T08:00:00Z', 
-            scheduled_at: todayString, recurrence_rule: { frequency: 'daily' }, isHabit: true, start_time: null, end_time: null
+            scheduled_at: todayString, recurrence_rule: { frequency: 'daily' }, isHabit: true, start_time: null, end_time: null, isFixed: false
         },
         {
             id: 'task_habit_3', user_id: 'user_123', project_id: null, milestone_id: null, text: 'Eiweiß Shake getrunken', completed: false, created_at: '2025-08-01T08:00:00Z', 
-            scheduled_at: todayString, recurrence_rule: { frequency: 'daily' }, isHabit: true, start_time: null, end_time: null
+            scheduled_at: todayString, recurrence_rule: { frequency: 'daily' }, isHabit: true, start_time: null, end_time: null, isFixed: false
         },
         {
             id: 'task_habit_4', user_id: 'user_123', project_id: null, milestone_id: null, text: 'Zähne geputzt', completed: true, created_at: '2025-08-01T08:00:00Z', 
-            scheduled_at: todayString, recurrence_rule: { frequency: 'daily' }, isHabit: true, start_time: null, end_time: null
+            scheduled_at: todayString, recurrence_rule: { frequency: 'daily' }, isHabit: true, start_time: null, end_time: null, isFixed: false
         },
-        // --- Timed Task Example ---
         {
             id: 'task_3', user_id: 'user_123', project_id: 'proj_1', milestone_id: 'ms_1', text: 'Ersten Trainingslauf absolvieren', completed: false, created_at: '2025-08-12T09:00:00Z', 
-            scheduled_at: todayString, pomodoro_estimation: 2, pomodoro_completed: 0, start_time: '09:00', end_time: '10:00'
+            scheduled_at: todayString, pomodoro_estimation: 2, pomodoro_completed: 0, start_time: '09:00', end_time: '10:00', isFixed: false
         },
-        // --- Untimed Task ---
+        // NEUER FIXER TERMIN
+        {
+            id: 'task_fixed_1', user_id: 'user_123', project_id: null, milestone_id: null, text: 'Mittagessen mit Schurl', completed: false, created_at: '2025-08-20T10:00:00Z', 
+            scheduled_at: todayString, pomodoro_estimation: 0, start_time: '13:00', end_time: '14:00', isFixed: true
+        },
         {
             id: 'task_1', user_id: 'user_123', project_id: 'proj_1', milestone_id: 'ms_1', text: 'Die richtigen Laufschuhe kaufen', completed: false, created_at: '2025-08-10T10:00:00Z', 
-            scheduled_at: todayString, pomodoro_estimation: 2, pomodoro_completed: 0, start_time: null, end_time: null
+            scheduled_at: todayString, pomodoro_estimation: 2, pomodoro_completed: 0, start_time: null, end_time: null, isFixed: false
         },
-        // --- Inbox Task ---
         {
             id: 'task_inbox_1', user_id: 'user_123', project_id: null, milestone_id: null, text: 'Neues Buch über Stoizismus recherchieren', completed: false, created_at: '2025-08-18T18:30:00Z', 
-            scheduled_at: null, pomodoro_estimation: 3, start_time: null, end_time: null
+            scheduled_at: null, pomodoro_estimation: 3, start_time: null, end_time: null, isFixed: false
         }
     ],
-    // ... (rest of database object)
     streaks: [
         { task_id: 'task_habit_2', current_streak: 12, longest_streak: 25, last_completed_date: yesterdayString },
         { task_id: 'task_habit_3', current_streak: 7, longest_streak: 7, last_completed_date: yesterdayString },
@@ -76,6 +99,11 @@ const database = {
     timeline_events: [],
     notes: [],
     prompts: [],
+    ausgangslage: { /* ... */ },
+    planTemplates: { /* ... */ },
+
+
+    // --- DATENMANIPULATIONS-FUNKTIONEN (mit Logging) ---
     addProject: function(projectData) {
         try {
             if (!projectData || !projectData.title) throw new Error("Project data or title is missing.");
@@ -115,6 +143,7 @@ const database = {
                 notes: taskData.notes || '',
                 completed: false,
                 created_at: new Date().toISOString(),
+                isFixed: taskData.isFixed || false // Standardwert
             };
             this.tasks.push(newTask);
             this._logSuccess('addTask', `Aufgabe "${newTask.text}" erfolgreich hinzugefügt.`);
