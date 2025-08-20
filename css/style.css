@@ -108,16 +108,15 @@ body {
 .app-header__actions .material-icons { font-size: 28px; cursor: pointer; }
 .main-content { 
   display: flex; flex-direction: column; 
-  align-items: center; text-align: center; 
+  align-items: center;
   height: calc(100vh - var(--header-height)); 
-  padding: 20px; 
-  padding-bottom: var(--nav-height-mobile); 
+  padding: 24px; 
   transition: padding-left var(--transition-speed) ease-in-out; 
   flex-grow: 1; 
   overflow-y: auto; 
 }
 
-.empty-state { max-width: 450px; }
+.empty-state { max-width: 450px; text-align: center; margin: auto; }
 .empty-state h2 { font-family: 'Montserrat', sans-serif; font-size: 22px; margin-top: 0; margin-bottom: 8px; }
 .empty-state p { color: var(--muted); font-size: 16px; line-height: 1.5; margin-bottom: 24px; }
 .button-cta { display: inline-flex; align-items: center; gap: 8px; padding: 14px 24px; border-radius: var(--radius); text-decoration: none; font-size: 16px; font-weight: 700; cursor: pointer; border: none; background-color: var(--main-blue); color: #fff; transition: background-color 0.2s; }
@@ -136,15 +135,15 @@ body {
   .app-nav { display: flex; justify-content: space-around; height: var(--nav-height-mobile); border-top: 1px solid var(--border-color); position: fixed; bottom: 0; left: 0; right: 0; }
   .nav-item { flex-direction: column; justify-content: center; font-size: 12px; gap: 4px; padding: 4px 8px; }
   .nav-item .material-icons { font-size: 24px; }
-  .main-content { padding-bottom: calc(20px + var(--nav-height-mobile)); }
+  .main-content { padding-bottom: calc(24px + var(--nav-height-mobile)); }
 }
 
 /* Desktop Nav */
 @media (min-width: 768px) {
-  body.app-body { padding-left: var(--sidenav-width-collapsed); padding-bottom: 20px; }
+  body.app-body { padding-left: var(--sidenav-width-collapsed); padding-bottom: 24px; }
   body.app-body.sidenav-expanded { padding-left: var(--sidenav-width-desktop); }
   .hamburger-menu { display: block; }
-  .main-content { padding-bottom: 20px; }
+  .main-content { padding-bottom: 24px; }
   .app-nav { display: flex; flex-direction: column; position: fixed; left: 0; top: var(--header-height); bottom: 0; width: var(--sidenav-width-collapsed); border-right: 1px solid var(--border-color); padding: 16px 0; }
   body.app-body.sidenav-expanded .app-nav { width: var(--sidenav-width-desktop); }
   .nav-item { flex-direction: row; justify-content: flex-start; font-size: 15px; gap: 16px; padding: 12px 26px; }
@@ -197,7 +196,7 @@ body {
   pointer-events: none;
 }
 
-.wizard-container {
+.wizard-container, .quick-add-container {
   background: #fff;
   padding: 24px 32px;
   border-radius: var(--radius);
@@ -221,6 +220,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
+  border: none;
   transition: background-color 0.2s, color 0.2s;
 }
 
@@ -231,26 +231,28 @@ body {
 /* === 9. Dashboard & Projekt-Karten Styles === */
 
 .main-content {
-    justify-content: flex-start;
     align-items: stretch;
-    padding: 24px;
-    flex-grow: 1;
-    overflow-y: auto;
 }
 
-.dashboard-header {
+.view-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
     width: 100%;
     max-width: 1200px;
-    margin-bottom: 24px;
+    margin: 0 auto 24px auto;
 }
 
-.dashboard-header h1 {
+.view-header__title h1 {
     font-family: 'Montserrat', sans-serif;
     font-size: 28px;
     margin: 0;
+}
+.view-header__title p {
+    font-size: 16px;
+    color: var(--muted);
+    margin: 4px 0 0 0;
+    font-weight: 600;
 }
 
 .projects-grid {
@@ -259,6 +261,7 @@ body {
     gap: 24px;
     width: 100%;
     max-width: 1200px;
+    margin: 0 auto;
 }
 
 .project-card {
@@ -271,6 +274,7 @@ body {
     justify-content: space-between;
     transition: box-shadow 0.2s, transform 0.2s;
     cursor: pointer;
+    text-align: left;
 }
 
 .project-card:hover {
@@ -350,27 +354,6 @@ body {
     border-radius: 4px;
 }
 
-.project-card-placeholder {
-    border: 2px dashed var(--border-color);
-    border-radius: var(--radius);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    color: var(--muted);
-    font-weight: 600;
-    min-height: 220px;
-    cursor: pointer;
-    transition: border-color 0.2s, color 0.2s;
-}
-.project-card-placeholder:hover {
-    border-color: var(--main-blue);
-    color: var(--main-blue);
-}
-.project-card-placeholder .material-icons {
-    font-size: 36px;
-    margin-bottom: 8px;
-}
 /* === 10. Projekt-Detail & Timeline Styles === */
 
 .project-header {
@@ -379,7 +362,7 @@ body {
     align-items: center;
     width: 100%;
     max-width: 1000px;
-    margin-bottom: 32px;
+    margin: 0 auto 32px auto;
     gap: 24px;
 }
 
@@ -426,6 +409,7 @@ body {
 .timeline {
     width: 100%;
     max-width: 800px;
+    margin: 0 auto;
     position: relative;
 }
 
@@ -542,32 +526,13 @@ body {
     opacity: 1;
     transform: scale(1);
 }
+
 /* === 11. Heute-Ansicht Styles === */
 
-.view-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+.today-list, .today-top-container, .settings-container, .inbox-container {
     width: 100%;
     max-width: 1000px;
-    margin-bottom: 24px;
-}
-
-.view-header__title h1 {
-    font-family: 'Montserrat', sans-serif;
-    font-size: 28px;
-    margin: 0;
-}
-.view-header__title p {
-    font-size: 16px;
-    color: var(--muted);
-    margin: 4px 0 0 0;
-    font-weight: 600;
-}
-
-.today-list {
-    width: 100%;
-    max-width: 1000px;
+    margin: 0 auto;
 }
 
 .today-task-item {
@@ -579,7 +544,6 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    cursor: pointer;
     transition: background-color 0.2s, border-color 0.2s, box-shadow 0.2s;
 }
 
@@ -587,17 +551,12 @@ body {
     display: flex;
     align-items: center;
     gap: 16px;
+    flex-grow: 1;
 }
 
-.task-checkbox {
+.today-task-item .task-checkbox {
     width: 24px;
     height: 24px;
-    border: 2px solid var(--border-color);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.2s;
 }
 
 .task-text {
@@ -616,10 +575,6 @@ body {
     color: var(--muted);
 }
 
-.task-checkbox .material-icons {
-    font-size: 18px;
-}
-
 .task-project-link {
     font-size: 13px;
     font-weight: 600;
@@ -634,17 +589,7 @@ body {
     text-decoration: underline;
 }
 
-.event-date {
-    font-size: 12px;
-    color: var(--muted);
-    margin-top: 8px;
-}
 /* === 13. Inbox-Ansicht Styles === */
-
-.inbox-container {
-    width: 100%;
-    max-width: 800px;
-}
 
 .inbox-input-container {
     display: flex;
@@ -691,26 +636,9 @@ body {
     gap: 8px;
 }
 
-.action-btn {
-    background: transparent;
-    border: none;
-    cursor: pointer;
-    color: var(--muted);
-    padding: 4px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 50%;
-}
-.action-btn:hover {
-    background-color: var(--light-gray);
-    color: var(--text);
-}
 /* === 14. Einstellungen-Ansicht Styles === */
 
 .settings-container {
-    width: 100%;
-    max-width: 800px;
     display: flex;
     flex-direction: column;
     gap: 24px;
@@ -721,6 +649,7 @@ body {
     border: 1px solid var(--border-color);
     border-radius: var(--radius);
     padding: 24px;
+    text-align: left;
 }
 
 .settings-section h2 {
@@ -767,24 +696,6 @@ body {
 
 .setting-item span, .setting-item label {
     font-weight: 600;
-}
-
-.color-picker {
-    display: flex;
-    gap: 12px;
-}
-
-.color-dot {
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
-    cursor: pointer;
-    border: 3px solid #fff;
-    box-shadow: 0 0 0 1px var(--border-color);
-}
-
-.color-dot.active {
-    box-shadow: 0 0 0 2px var(--main-blue);
 }
 
 .toggle-switch {
@@ -850,12 +761,8 @@ input[type="date"].setting-input {
     width: auto;
 }
 
-/* === 15. Onboarding-Flow Styles === */
-/* ... (unverändert) ... */
+/* === 15. Quick-Add, Pomodoro & Wizard Styles === */
 
-/* === 16. Finale Ergänzungen === */
-
-/* Quick-Add Button & Modal */
 .quick-add-btn {
     display: flex;
     align-items: center;
@@ -875,14 +782,7 @@ input[type="date"].setting-input {
     box-shadow: 0 6px 16px rgba(18,35,168,0.3);
 }
 .quick-add-container {
-    background: #fff;
-    padding: 24px 32px;
-    border-radius: var(--radius);
-    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-    position: relative;
-    width: 100%;
     max-width: 480px;
-    text-align: center;
 }
 .quick-add-container h2 {
     font-family: 'Montserrat', sans-serif;
@@ -896,24 +796,9 @@ input[type="date"].setting-input {
 .quick-add-container .input-group {
     margin-bottom: 24px;
 }
-.quick-add-container input {
-    width: 100%;
-    padding: 14px;
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius);
-    font-size: 16px;
-    font-family: "IBM Plex Sans", sans-serif;
-}
-.quick-add-container input:focus {
-    outline: none;
-    border-color: var(--main-blue);
-    box-shadow: 0 0 0 2px rgba(18,35,168,0.2);
-}
 
-/* Pomodoro Timer auf der Heute-Seite */
 .pomodoro-timer {
-    width: 100%;
-    max-width: 800px;
+    flex: 1;
     background: #fff;
     border: 1px solid var(--border-color);
     border-radius: var(--radius);
@@ -921,11 +806,11 @@ input[type="date"].setting-input {
     display: flex;
     flex-direction: column;
     align-items: center;
-    margin-bottom: 24px;
+    justify-content: center;
 }
 .timer-display {
     font-family: 'Montserrat', sans-serif;
-    font-size: 48px;
+    font-size: 40px;
     font-weight: 700;
     color: var(--text);
 }
@@ -955,7 +840,6 @@ input[type="date"].setting-input {
     border-color: var(--main-blue);
 }
 
-/* Pomodoro-Infos bei den Aufgaben */
 .task-meta {
     display: flex;
     align-items: center;
@@ -974,15 +858,16 @@ input[type="date"].setting-input {
     color: var(--main-blue);
 }
 
-/* Zusätzliche Stile für Wizard-Optionen */
 .options-container { display: flex; flex-direction: column; gap: 12px; margin-top: 24px; }
-.option-button { display: block; width: 100%; padding: 16px; border: 2px solid var(--border-color); border-radius: var(--radius); font-size: 16px; font-weight: 600; text-align: center; cursor: pointer; background-color: #fff; transition: border-color 0.2s, background-color 0.2s; }
+.option-button { display: flex; width: 100%; padding: 16px; border: 2px solid var(--border-color); border-radius: var(--radius); font-size: 16px; font-weight: 600; text-align: left; cursor: pointer; background-color: #fff; transition: border-color 0.2s, background-color 0.2s; align-items: center; gap: 12px; }
 .option-button:hover { border-color: var(--main-blue); }
 .option-button.selected { border-color: var(--main-blue); background-color: rgba(18, 35, 168, 0.1); font-weight: 700; }
+.option-button.danger { color: var(--main-red); border-color: var(--main-red); }
+.option-button.danger:hover { background-color: rgba(227, 32, 45, 0.05); }
 
-/* === 17. Kontext-Stile === */
+/* === 16. Kontext, Streak & Pomodoro Styles === */
 .card-context {
-    font-size: 16px;
+    font-size: 14px;
     font-weight: 600;
     color: var(--muted);
     background-color: var(--light-gray);
@@ -992,86 +877,43 @@ input[type="date"].setting-input {
     border-bottom: 1px solid var(--border-color);
 }
 
-/* === 18. Inbox Processing Wizard Styles === */
-
-.process-wizard-header {
-    margin-bottom: 24px;
-    padding-bottom: 16px;
-    border-bottom: 1px solid var(--border-color);
-}
-.process-wizard-header p {
-    margin: 0 0 4px 0;
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--muted);
-}
-.process-wizard-header h2 {
-    margin: 0;
-    font-family: 'Montserrat', sans-serif;
-    font-size: 22px;
-    line-height: 1.4;
-}
-.options-container.vertical {
-    flex-direction: column;
-    gap: 12px;
-}
-.options-container .option-button {
+.pomodoro-count, .task-streak {
     display: flex;
     align-items: center;
-    justify-content: flex-start;
-    gap: 12px;
-    padding: 16px;
-    text-align: left;
-}
-.option-button.danger {
-    color: var(--main-red);
-    border-color: var(--main-red);
-}
-.option-button.danger:hover {
-    background-color: rgba(227, 32, 45, 0.05);
-}
-.option-button .context-emoji {
-    margin-right: 4px;
-}
-
-/* === 19. Pomodoro Task Styles === */
-
-.pomodoro-count {
-    display: flex;
-    align-items: center;
-    gap: 4px;
+    gap: 6px;
     font-size: 14px;
     font-weight: 700;
-    color: var(--muted);
-    background-color: var(--light-gray);
     padding: 4px 10px;
     border-radius: 99px;
+}
+.pomodoro-count {
+    color: var(--muted);
+    background-color: var(--light-gray);
 }
 .pomodoro-count .pomodoro-completed {
     color: var(--text);
 }
-
-/* === 20. Active Pomodoro Task Style === */
+.task-streak {
+    color: #E67E22;
+    background-color: rgba(230, 126, 34, 0.1);
+}
 
 .today-task-item.task-in-progress {
     background-color: rgba(18, 35, 168, 0.05);
     border-color: var(--main-blue);
     box-shadow: 0 0 0 1px var(--main-blue);
 }
-
-.today-task-item.task-in-progress .start-task-timer-btn .material-icons {
+.today-task-item.task-in-progress .start-task-timer-btn {
     color: var(--main-blue);
 }
 
-/* === 21. Today View Layout === */
+/* === 17. Today View Layout === */
 
 .today-top-container {
     display: flex;
     gap: 24px;
-    width: 100%;
-    max-width: 1000px;
-    margin-bottom: 24px;
     align-items: stretch;
+    margin-bottom: 24px;
 }
 
 .daily-cockpit {
@@ -1096,10 +938,11 @@ input[type="date"].setting-input {
     display: flex;
     gap: 32px;
     margin: auto 0;
+    align-items: center;
 }
 
 .goal-stat {
-    text-align: left;
+    text-align: center;
 }
 
 .stat-value {
@@ -1107,214 +950,123 @@ input[type="date"].setting-input {
     font-weight: 700;
     font-family: 'Montserrat', sans-serif;
     line-height: 1.2;
-}
-
-.stat-label {
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--muted);
-}
-
-/* Anpassung des bestehenden Pomodoro-Timers */
-.pomodoro-timer {
-    flex: 1;
-    max-width: none;
-    width: auto;
-    margin-bottom: 0;
+    display: flex;
+    align-items: baseline;
     justify-content: center;
 }
 
-.timer-display {
-    font-size: 40px;
-}
+.stat-current { color: var(--text); }
+.stat-divider { color: var(--muted); margin: 0 2px; font-size: 20px; }
+.stat-target { color: var(--muted); font-size: 18px; font-weight: 600; }
 
-/* === 22. Streak Display Styles === */
-
-.task-streak {
+.cockpit-trackers {
     display: flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 14px;
-    font-weight: 700;
-    color: #E67E22; /* Orange Farbe für die Flamme */
-    background-color: rgba(230, 126, 34, 0.1);
-    padding: 4px 10px;
-    border-radius: 99px;
-}
-/* Am Ende der style.css hinzufügen */
-
-/* NEU: Styles für Score-Widgets */
-.score-widgets {
-    width: 100%;
-    max-width: 1000px;
-    display: flex;
-    justify-content: space-between;
-    gap: 16px;
-    margin-bottom: 24px;
+    gap: 32px;
 }
 
-.score-card {
-    background: #fff;
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius);
-    padding: 16px;
-    flex-grow: 1;
+.tracker-stat .stat-value {
+    font-size: 20px;
+    color: var(--main-blue);
+}
+.tracker-stat .stat-label {
+    font-size: 12px;
+    color: var(--muted);
+    font-weight: 600;
+}
+
+/* === 18. Zusätzliche UI-Elemente === */
+.badge {
+    background-color: var(--muted);
+    color: white;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+    margin-left: auto;
+}
+.option-button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    background-color: var(--light-gray);
+}
+.milestones-input-container {
     display: flex;
     flex-direction: column;
-    align-items: center;
+    gap: 12px;
+    text-align: left;
 }
-
-.score-card h3 {
+.milestone-input-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.milestone-input-group input {
+    flex-grow: 1;
+    padding: 12px;
+    font-size: 16px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius);
+}
+.milestone-input-group .button-icon {
+    padding: 8px;
+    min-width: auto;
+}
+.setting-description {
     font-size: 14px;
     color: var(--muted);
-    font-weight: 600;
-    margin: 0 0 8px 0;
-    text-transform: uppercase;
+    margin-top: -12px;
+    margin-bottom: 16px;
 }
-
-.score-card .score-value {
-    font-size: 32px;
-    font-weight: 700;
-    font-family: 'Montserrat', sans-serif;
+.day-picker-container {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+}
+.day-toggle {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.day-toggle.active {
+    background-color: var(--main-blue);
+    color: #fff;
+    border-color: var(--main-blue);
+}
+.toast {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #333;
+    color: #fff;
+    padding: 12px 24px;
+    border-radius: var(--radius);
+    font-weight: 600;
+    z-index: 2000;
+    opacity: 1;
+    transition: opacity 0.3s, bottom 0.3s;
+}
+.toast.hidden {
+    opacity: 0;
+    bottom: -50px;
+    pointer-events: none;
+}
+.task-time {
+    font-size: 14px;
+    font-weight: 600;
     color: var(--main-blue);
     display: flex;
     align-items: center;
     gap: 6px;
+    width: 110px;
 }
-
-/* NEU: Styles für Flammen-Symbol */
-.today-task-item .task-meta {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
-
-.streak-display {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    font-size: 14px;
-    font-weight: 700;
-    color: var(--main-red);
-}
-
-.streak-display .material-icons {
-    color: var(--main-red);
-    font-size: 20px;
-}
-
-/* Füge diese CSS-Regeln zu deiner style.css hinzu: */
-
-/* === VERBESSERTE TAGESZIELE STYLES === */
-
-.stat-value {
-    font-size: 28px;
-    font-weight: 700;
-    font-family: 'Montserrat', sans-serif;
-    line-height: 1.2;
-    display: flex;
-    align-items: baseline;
-    justify-content: center;
-}
-
-.stat-current {
-    color: var(--text);
-}
-
-.stat-divider {
-    color: var(--muted);
-    margin: 0 2px;
-    font-size: 20px; /* Etwas kleiner als die Hauptzahl */
-}
-
-.stat-target {
-    color: var(--muted);
-    font-size: 18px; /* Etwa die Hälfte der Hauptzahl */
-    font-weight: 600; /* Etwas weniger dick */
-}
-
-/* Tracker-Container für individuelle Metriken */
-.cockpit-trackers {
-    display: flex;
-    gap: 24px;
-    margin-top: 16px;
-    padding-top: 16px;
-    border-top: 1px solid var(--border-color);
-}
-
-.tracker-stat {
-    text-align: center;
-}
-
-.tracker-stat .stat-value {
-    font-size: 20px;
-    color: var(--main-blue);
-}
-
-.tracker-stat .stat-label {
-    font-size: 12px;
-    color: var(--muted);
-    font-weight: 600;
-}
-
-/* Füge diese CSS-Regeln zu deiner style.css hinzu: */
-
-/* === VERBESSERTE TAGESZIELE STYLES === */
-
-.cockpit-goals {
-    display: flex;
-    gap: 32px;
-    margin: auto 0;
-    /* Alle Goals UND Tracker in einer Reihe */
-    align-items: center;
-}
-
-.stat-value {
-    font-size: 28px;
-    font-weight: 700;
-    font-family: 'Montserrat', sans-serif;
-    line-height: 1.2;
-    display: flex;
-    align-items: baseline;
-    justify-content: center;
-}
-
-.stat-current {
-    color: var(--text);
-}
-
-.stat-divider {
-    color: var(--muted);
-    margin: 0 2px;
-    font-size: 20px; /* Etwas kleiner als die Hauptzahl */
-}
-
-.stat-target {
-    color: var(--muted);
-    font-size: 18px; /* Etwa die Hälfte der Hauptzahl */
-    font-weight: 600; /* Etwas weniger dick */
-}
-
-/* Tracker-Container für individuelle Metriken - JETZT INLINE */
-.cockpit-trackers {
-    display: flex;
-    gap: 32px;
-    /* ENTFERNT: margin-top, padding-top, border-top */
-    /* Tracker werden jetzt direkt in die Goal-Reihe integriert */
-}
-
-.tracker-stat {
-    text-align: center;
-}
-
-.tracker-stat .stat-value {
-    font-size: 20px;
-    color: var(--main-blue);
-    /* Kleinere Tracker-Werte für bessere Balance */
-}
-
-.tracker-stat .stat-label {
-    font-size: 12px;
-    color: var(--muted);
-    font-weight: 600;
+.task-time .material-icons {
+    font-size: 18px;
 }

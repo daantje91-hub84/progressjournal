@@ -5,7 +5,6 @@
     </div>
 </div>
 
-<!-- VERBESSERTER HAUPT-CONTAINER FÜR DAS TAGES-COCKPIT -->
 <div class="today-top-container">
     <div class="daily-cockpit">
         <h3>Tagesziele</h3>
@@ -26,10 +25,7 @@
                 <div class="stat-value" id="active-streaks-stat">🔥 0</div>
                 <div class="stat-label">Aktive Streaks</div>
             </div>
-            <!-- TRACKER JETZT DIREKT IN DER GOALS-REIHE -->
-            <div id="cockpit-trackers-container" class="cockpit-trackers">
-                <!-- Individuelle Tracker werden hier per JS eingefügt -->
-            </div>
+            <div id="cockpit-trackers-container" class="cockpit-trackers"></div>
         </div>
     </div>
     
@@ -45,3 +41,24 @@
 <div class="today-list" id="today-list">
     <!-- Today tasks werden hier per JavaScript eingefügt -->
 </div>
+
+<style>
+.task-time {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--main-blue);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    width: 110px; /* Feste Breite für saubere Ausrichtung */
+}
+.task-time .material-icons {
+    font-size: 18px;
+}
+.today-task-item .task-info {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-grow: 1; /* Nimmt den verfügbaren Platz ein */
+}
+</style>

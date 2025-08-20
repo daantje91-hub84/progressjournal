@@ -2,54 +2,51 @@
   <div class="wizard-container">
     <button class="close-button" id="close-wizard-btn"><span class="material-icons">close</span></button>
     <div class="progress-bar">
-      <div class="progress-bar__label" id="progress-label">Schritt 1 von 5</div>
+      <div class="progress-bar__label" id="progress-label">Schritt 1 von 4</div>
       <div class="progress-bar__track"><div class="progress-bar__fill" id="progress-fill"></div></div>
     </div>
     <main class="wizard-content">
       
+      <!-- Step 0: Choose Method -->
       <section id="step-0" class="wizard-step">
-        <h1>Wie möchtest du deine Roadmap erstellen?</h1>
-        <p>Du kannst die KI nutzen, um einen Plan zu erstellen, oder du legst die Meilensteine selbst fest.</p>
-        <div class="options-container">
-          <button type="button" class="option-button" data-wizard-type="ai">Mit KI erstellen</button>
-          <button type="button" class="option-button" data-wizard-type="manual">Manuell erstellen</button>
+        <h1>Wie möchtest du dein Projekt erstellen?</h1>
+        <p>Du kannst die Meilensteine direkt eingeben oder die KI nutzen, um einen Plan vorzuschlagen.</p>
+        <div class="options-container vertical">
+          <button type="button" class="option-button" data-wizard-type="manual">
+            <span class="material-icons">edit_note</span> Manuell erstellen
+          </button>
+          <button type="button" class="option-button" data-wizard-type="ai" disabled>
+            <span class="material-icons">auto_awesome</span> Mit KI erstellen <span class="badge">Kommt bald</span>
+          </button>
         </div>
       </section>
 
+      <!-- Step 1: Goal Input -->
       <section id="step-1" class="wizard-step hidden">
-        <h1>Was ist dein großes Ziel?</h1>
+        <h1>Was ist das Ziel deines Projekts?</h1>
         <p>Beschreibe dein Ziel in einem Satz. Z.B. "Einen Marathon unter 4 Stunden laufen".</p>
         <input type="text" id="goal-input" class="wizard-input" placeholder="Hier Ziel eingeben..." autocomplete="off">
       </section>
 
+      <!-- Step 2: Context -->
       <section id="step-2" class="wizard-step hidden">
         <h1>Zu welchem Lebensbereich gehört dieses Ziel?</h1>
         <p>Eine Zuordnung hilft dir, den Überblick über deine Prioritäten zu behalten.</p>
         <div id="context-options" class="options-container">
-            </div>
-      </section>
-
-      <section id="step-3" class="wizard-step hidden">
-        <h1>Bis wann möchtest du es erreichen?</h1>
-        <p>Ein Zieldatum hilft dir, auf Kurs zu bleiben. Du kannst es später jederzeit anpassen.</p>
-        <div id="deadline-options" class="options-container">
-            <button type="button" class="option-button" data-value="ai_suggestion">Schlage mir eine realistische Deadline vor</button>
-            <button type="button" class="option-button" data-value="user_date">Ich setze mein eigenes Zieldatum</button>
+            <!-- Contexts will be loaded here by JS -->
         </div>
-        <div id="deadline-input-container"><input type="date" id="deadline-input" class="wizard-input"></div>
       </section>
 
-      <section id="step-4" class="wizard-step hidden">
-        <h1>Wie ist deine aktuelle Ausgangslage?</h1>
-        <p>Sei ehrlich – das hilft uns, einen Plan zu erstellen, der wirklich zu dir passt.</p>
-        <div id="ausgangslage-options" class="options-container"></div>
-      </section>
-
-      <section id="step-5" class="wizard-step hidden">
-        <h1>Hier ist ein erster Entwurf für deine Roadmap.</h1>
-        <p>Basierend auf deinen Angaben schlägt die KI folgende Meilensteine vor. Keine Sorge, im nächsten Schritt können wir alles anpassen.</p>
-        <div id="plan-display-container" class="plan-container">
-          </div>
+      <!-- Step 3 (NEW): Milestones for Manual Path -->
+      <section id="step-3" class="wizard-step hidden">
+        <h1>Gibt es bereits Meilensteine für dein Projekt?</h1>
+        <p>Du kannst hier erste Schritte definieren oder diesen Schritt überspringen und sie später hinzufügen.</p>
+        <div id="milestones-container" class="milestones-input-container">
+            <!-- Milestone inputs will be added here by JS -->
+        </div>
+        <button type="button" id="add-milestone-btn" class="button-icon" style="margin-top: 16px;">
+            <span class="material-icons">add</span> Meilenstein hinzufügen
+        </button>
       </section>
 
     </main>
@@ -59,3 +56,43 @@
     </footer>
   </div>
 </div>
+
+<!-- Add this to your style.css if it's not already there -->
+<style>
+.badge {
+    background-color: var(--muted);
+    color: white;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+    margin-left: auto;
+}
+.option-button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    background-color: var(--light-gray);
+}
+.milestones-input-container {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    text-align: left;
+}
+.milestone-input-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.milestone-input-group input {
+    flex-grow: 1;
+    padding: 12px;
+    font-size: 16px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius);
+}
+.milestone-input-group .button-icon {
+    padding: 8px;
+    min-width: auto;
+}
+</style>
